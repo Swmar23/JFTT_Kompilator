@@ -1,0 +1,8 @@
+PROGRAM IS
+VAR n, p
+BEGIN
+  READ n;
+  READ p; 
+  WRITE p;
+  WRITE n;
+END

@@ -1,11 +1,15 @@
 from sly import Parser
 
 from lexer import MyLexer
+from generator import CodeGenerator, Command
 
 class MyParser(Parser):
   tokens = MyLexer.tokens
   start = 'program_all'
 
+  def __init__(self):
+    self.code_generator = CodeGenerator()
+  
   precedence = (
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIV', 'MOD')
@@ -16,12 +20,13 @@ class MyParser(Parser):
   # program_all *****************************
   @_('procedures main')
   def program_all(self, t):
-    pass
+    # tu zmień na stringi
+    return self.code_generator.generate_code(Command.PROGRAM_HALT, (t.procedures, t.main), t.lineno)
   
   # procedures ******************************
   @_('procedures PROCEDURE proc_head_proc IS VAR declarations_proc BEGIN commands END')
   def procedures(self, t):
-    pass
+    pass # 
 
   @_('procedures PROCEDURE proc_head_proc IS BEGIN commands END')
   def procedures(self, t):
@@ -34,7 +39,7 @@ class MyParser(Parser):
   # main *************************************
   @_('PROGRAM IS VAR declarations_main BEGIN commands END')
   def main(self, t):
-    pass
+    return self.code_generator.generate_code(Command.MAIN, (t.declarations_main, t.commands), t.lineno)
 
   @_('PROGRAM IS BEGIN commands END')
   def main(self, t):
@@ -43,11 +48,11 @@ class MyParser(Parser):
   # commands **********************************
   @_('commands command')
   def commands(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMANDS_COMMAND, (t.commands, t.command), t.lineno)
 
   @_('command')
   def commands(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMANDS, t.command, t.lineno)
 
   # command ************************************
   @_('IDENTIFIER ASSIGN expression SEMICOLON')
@@ -76,11 +81,11 @@ class MyParser(Parser):
 
   @_('READ IDENTIFIER SEMICOLON')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_READ, t.IDENTIFIER, t.lineno)
 
   @_('WRITE value SEMICOLON')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_WRITE, t.value, t.lineno)
 
   # proc_head_proc *********************************
   @_('IDENTIFIER LPAREN declarations_proc RPAREN')
@@ -109,11 +114,11 @@ class MyParser(Parser):
   # declarations_main *********************************
   @_('declarations_main COMMA IDENTIFIER')
   def declarations_main(self, t):
-    pass
+    return self.code_generator.generate_code(Command.DECLARATIONS_MAIN, t.IDENTIFIER, t.lineno)
 
   @_('IDENTIFIER')
   def declarations_main(self, t):
-    pass
+    return self.code_generator.generate_code(Command.DECLARATIONS_MAIN, t.IDENTIFIER, t.lineno)
 
   # declarations_call ***********************************
   @_('declarations_call COMMA IDENTIFIER')
@@ -181,12 +186,12 @@ class MyParser(Parser):
 
   @_('IDENTIFIER')
   def value(self, t):
-    pass
+    return self.code_generator.generate_code(Command.VALUE_IDENTIFIER, t.IDENTIFIER, t.lineno)
 
   # *******************************
   def error(self, p):
     if p:
-      print("Błąd składni przy tokenie", p.type)
+      print(f'Błąd składni przy tokenie {p.type}')
     else:
       print("Błąd składni przy końcu pliku (czegoś brakuje?)")
     exit(5)

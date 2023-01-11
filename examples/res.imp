@@ -1,0 +1,5 @@
+GET 1
+GET 2
+PUT 2
+PUT 1
+HALT
