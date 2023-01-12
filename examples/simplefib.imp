@@ -1,0 +1,22 @@
+PROGRAM IS
+VAR a, b, c, n
+BEGIN
+  READ n;
+  IF n = 0 THEN
+    WRITE 0;
+  ENDIF
+  IF n = 1 THEN
+    WRITE 1;
+  ENDIF
+  IF n > 1 THEN
+    a := 0;
+    b := 1;
+    REPEAT
+      c := a + b;
+      a := b;
+      b := c;
+      n := n - 1;
+    UNTIL n > 1;
+    WRITE c;
+  ENDIF
+END

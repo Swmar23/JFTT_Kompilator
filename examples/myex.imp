@@ -3,9 +3,9 @@ VAR a, b
 BEGIN
   READ a;
   READ b;
-  WHILE a > 0 DO
+  REPEAT
     a := a - 1;
     b := b + 1;
-  ENDWHILE
+  UNTIL a >= 3;
   WRITE b;
 END

@@ -72,7 +72,7 @@ class MyParser(Parser):
 
   @_('REPEAT commands UNTIL condition SEMICOLON')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_REPEAT, (t.condition, t.commands), t.lineno)
 
   @_('proc_head_call SEMICOLON')
   def command(self, t):

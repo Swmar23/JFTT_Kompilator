@@ -424,7 +424,7 @@ class CodeGenerator:
     commands_code_length = len(commands_codes)
     if condition_info == Command.CONDITION_EQ:
       condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = commands_code_length + 4
-      condition_codes[condition_codes.index(Code(f'JPOS', 1))].offset = commands_code_length + 1
+      condition_codes[condition_codes.index(Code(f'JPOS', -1))].offset = commands_code_length + 1
     elif condition_info == Command.CONDITION_NEQ:
       condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = commands_code_length + 1
     elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
@@ -443,7 +443,7 @@ class CodeGenerator:
     codes = []
     if condition_info == Command.CONDITION_EQ:
       condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = commands_code_length1 + 5
-      condition_codes[condition_codes.index(Code(f'JPOS', 1))].offset = commands_code_length1 + 2
+      condition_codes[condition_codes.index(Code(f'JPOS', -1))].offset = commands_code_length1 + 2
     elif condition_info == Command.CONDITION_NEQ:
       condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = commands_code_length1 + 2
     elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
@@ -464,7 +464,7 @@ class CodeGenerator:
     condition_codes_length = len(condition_codes)
     if condition_info == Command.CONDITION_EQ:
       condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = commands_code_length + 5
-      condition_codes[condition_codes.index(Code(f'JPOS', 1))].offset = commands_code_length + 2
+      condition_codes[condition_codes.index(Code(f'JPOS', -1))].offset = commands_code_length + 2
     elif condition_info == Command.CONDITION_NEQ:
       condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = commands_code_length + 2
     elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
@@ -474,4 +474,29 @@ class CodeGenerator:
     codes += condition_codes
     codes += commands_codes
     codes += [Code(f'JUMP', -commands_code_length - condition_codes_length)]
+    return codes
+
+  def __command_repeat(self, x, l): # problematyczne, sporo do zmiany
+    (condition_data, commands_codes) = x
+    (condition_codes, condition_info) = condition_data
+    codes = []
+    commands_code_length = len(commands_codes)
+    condition_codes_length = len(condition_codes)
+    if condition_info == Command.CONDITION_EQ:
+      condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = 4
+      condition_codes[condition_codes.index(Code(f'JPOS', -1))].name = f'JZERO'
+      condition_codes[condition_codes.index(Code(f'JZERO', -1))].offset = -commands_code_length - condition_codes_length + 1
+    elif condition_info == Command.CONDITION_NEQ:
+      condition_codes[condition_codes.index(Code(f'JPOS', 2))].offset = -commands_code_length - condition_codes_length + 2
+      condition_codes[condition_codes.index(Code(f'JPOS', 5))].offset = -commands_code_length - condition_codes_length + 5
+      del condition_codes[condition_codes.index(Code(f'JUMP', 0))]
+    elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
+      condition_codes[condition_codes.index(Code(f'JPOS', 2))].offset = -commands_code_length - condition_codes_length + 2
+      del condition_codes[condition_codes.index(Code(f'JUMP', 0))]
+    elif condition_info == Command.CONDITION_GEQ or condition_info == Command.CONDITION_LEQ:
+      condition_codes[condition_codes.index(Code(f'JPOS', 4))].offset = -commands_code_length - condition_codes_length + 4
+      condition_codes[condition_codes.index(Code(f'JPOS', 0))].name = f'JZERO'
+      condition_codes[condition_codes.index(Code(f'JZERO', 0))].offset = -commands_code_length - condition_codes_length + 1
+    codes += commands_codes
+    codes += condition_codes
     return codes
