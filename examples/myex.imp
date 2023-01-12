@@ -3,10 +3,10 @@ VAR a, b, c
 BEGIN
   READ a;
   READ b;
-  IF a != b THEN
-    c := 0;
-  ELSE
+  IF a <= b THEN
     c := 1;
+  ELSE
+    c := 0;
   ENDIF
   WRITE c;
 END

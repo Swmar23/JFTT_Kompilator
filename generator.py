@@ -329,6 +329,86 @@ class CodeGenerator:
     codes += [Code(f'JUMP', 0)]
     return codes, Command.CONDITION_NEQ
   
+  def __condition_gt(self, x, l):
+    (value1_data, value2_data) = x
+    (value1_codes, value1_info) = value1_data
+    (value2_codes, value2_info) = value2_data
+    codes = []
+    codes += value1_codes
+    codes += value2_codes
+    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address1, l):
+      Errors.uninitiated(value1_info, l)
+    codes += [Code(f'LOAD {var_address1}')]
+    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address2, l):
+      Errors.uninitiated(value2_info, l)
+    codes += [Code(f'SUB {var_address2}')]
+    codes += [Code(f'JPOS', 2)]
+    codes += [Code(f'JUMP', 0)]
+    return codes, Command.CONDITION_GT
+
+  def __condition_lt(self, x, l):
+    (value1_data, value2_data) = x
+    (value1_codes, value1_info) = value1_data
+    (value2_codes, value2_info) = value2_data
+    codes = []
+    codes += value1_codes
+    codes += value2_codes
+    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address2, l):
+      Errors.uninitiated(value2_info, l)
+    codes += [Code(f'LOAD {var_address2}')]
+    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address1, l):
+      Errors.uninitiated(value1_info, l)
+    codes += [Code(f'SUB {var_address1}')]
+    codes += [Code(f'JPOS', 2)]
+    codes += [Code(f'JUMP', 0)]
+    return codes, Command.CONDITION_LT
+
+  def __condition_geq(self, x, l):
+    (value1_data, value2_data) = x
+    (value1_codes, value1_info) = value1_data
+    (value2_codes, value2_info) = value2_data
+    codes = []
+    codes += value1_codes
+    codes += value2_codes
+    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address1, l):
+      Errors.uninitiated(value1_info, l)
+    codes += [Code(f'LOAD {var_address1}')]
+    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address2, l):
+      Errors.uninitiated(value2_info, l)
+    codes += [Code(f'SUB {var_address2}')]
+    codes += [Code(f'JPOS', 4)]
+    codes += [Code(f'LOAD {var_address2}')]
+    codes += [Code(f'SUB {var_address1}')]
+    codes += [Code(f'JPOS', 0)]
+    return codes, Command.CONDITION_GEQ
+  
+  def __condition_leq(self, x, l):
+    (value1_data, value2_data) = x
+    (value1_codes, value1_info) = value1_data
+    (value2_codes, value2_info) = value2_data
+    codes = []
+    codes += value1_codes
+    codes += value2_codes
+    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address2, l):
+      Errors.uninitiated(value2_info, l)
+    codes += [Code(f'LOAD {var_address2}')]
+    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address1, l):
+      Errors.uninitiated(value1_info, l)
+    codes += [Code(f'SUB {var_address1}')]
+    codes += [Code(f'JPOS', 4)]
+    codes += [Code(f'LOAD {var_address1}')]
+    codes += [Code(f'SUB {var_address2}')]
+    codes += [Code(f'JPOS', 0)]
+    return codes, Command.CONDITION_GEQ
+  
   def __command_if(self, x, l):
     (condition_data, commands_data) = x
     (condition_codes, condition_info) = condition_data
@@ -340,6 +420,10 @@ class CodeGenerator:
       condition_codes[5].offset = commands_code_length + 1
     elif condition_info == Command.CONDITION_NEQ:
       condition_codes[6].offset = commands_code_length + 1
+    elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
+      condition_codes[3].offset = commands_code_length + 1
+    elif condition_info == Command.CONDITION_GEQ or condition_info == Command.CONDITION_LEQ:
+      condition_codes[5].offset = commands_code_length + 1
     codes += condition_codes
     codes += commands_codes
     return codes
@@ -355,6 +439,10 @@ class CodeGenerator:
       condition_codes[5].offset = commands_code_length1 + 2
     elif condition_info == Command.CONDITION_NEQ:
       condition_codes[6].offset = commands_code_length1 + 2
+    elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
+      condition_codes[3].offset = commands_code_length1 + 2
+    elif condition_info == Command.CONDITION_GEQ or condition_info == Command.CONDITION_LEQ:
+      condition_codes[5].offset = commands_code_length1 + 2
     codes += condition_codes
     codes += commands_codes1
     codes += [Code(f'JUMP', commands_code_length2 + 1)]

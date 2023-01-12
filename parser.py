@@ -20,13 +20,12 @@ class MyParser(Parser):
   # program_all *****************************
   @_('procedures main')
   def program_all(self, t):
-    # tu zmień na stringi
     return self.code_generator.generate_code(Command.PROGRAM_HALT, (t.procedures, t.main), t.lineno)
   
   # procedures ******************************
   @_('procedures PROCEDURE proc_head_proc IS VAR declarations_proc BEGIN commands END')
   def procedures(self, t):
-    pass # 
+    pass 
 
   @_('procedures PROCEDURE proc_head_proc IS BEGIN commands END')
   def procedures(self, t):
@@ -161,24 +160,23 @@ class MyParser(Parser):
 
   @_('value NEQ value')
   def condition(self, t):
-    pass
     return self.code_generator.generate_code(Command.CONDITION_NEQ, (t.value0, t.value1), t.lineno)
 
   @_('value GT value')
   def condition(self, t):
-    pass
+    return self.code_generator.generate_code(Command.CONDITION_GT, (t.value0, t.value1), t.lineno)
 
   @_('value LT value')
   def condition(self, t):
-    pass
+    return self.code_generator.generate_code(Command.CONDITION_LT, (t.value0, t.value1), t.lineno)
 
   @_('value GEQ value')
   def condition(self, t):
-    pass
+    return self.code_generator.generate_code(Command.CONDITION_GEQ, (t.value0, t.value1), t.lineno)
 
   @_('value LEQ value')
   def condition(self, t):
-    pass
+    return self.code_generator.generate_code(Command.CONDITION_LEQ, (t.value0, t.value1), t.lineno)
 
   # value ******************************************
   @_('NUM')
