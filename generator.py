@@ -91,15 +91,43 @@ class Code:
       return f'{self.name} {self.offset}'
     else:
       return self.name
+
+class SymbolTable:
+
+  def __init__(self):
+    self.addresses_main = []
+    self.first_address_main = 1
+  
+  def getVariableAdress(self, variable: Variable, lineno):
+    for var in self.addresses_main:
+      if variable == var:
+        return self.addresses_main.index(var) + 1
+    Errors.undeclared(variable.name, lineno)
+
+  def getVariableFromAdress(self, address) -> Variable:
+    return self.addresses_main[address-1]
+  
+  def addVariable(self, variable: Variable, lineno):
+    if variable in self.addresses_main:
+      Errors.redeclaration(variable.name, lineno)
+    self.addresses_main.append(variable)
+    self.first_address_main += 1
+  
+  def initiateVariable(self, variable: Variable, lineno):
+    var = self.getVariableFromAdress(self.getVariableAdress(variable, lineno))
+    var.is_initiated = True
+
+  def isVarInitiated(self, address, lineno):
+    var = self.addresses_main[address-1]
+    return var.is_initiated
     
 
 class CodeGenerator:
 
   def __init__(self):
-    self.variable_adresses = {}
-    self.first_adress = 1
+    self.symbol_table = SymbolTable()
 
-  # procedure_adresses = {}
+  # procedure_addresses = {}
 
   def generate_code(self, code, param, lineno):
     return {
@@ -143,25 +171,18 @@ class CodeGenerator:
 
   def __command_read(self, x, l):
     variable = Variable(x, True, True)
-    if variable in self.variable_adresses:
-      code = Code(f'GET {self.variable_adresses[variable]}' )
-    else:
-      Errors.undeclared(variable.name, l)
-    varToChange = [k for k, v in self.variable_adresses.items() if v == self.variable_adresses[variable]][0]
-    varToChange.is_initiated = True
+    var_address = self.symbol_table.getVariableAdress(variable, l)
+    code = Code(f'GET {var_address}' )
+    self.symbol_table.initiateVariable(variable, l)
     codes = [code]
     return codes
 
   def __command_write(self, x, l):
     variable = Variable(x[1], True, True)
-    if variable in self.variable_adresses:
-      varToCheck = [k for k, v in self.variable_adresses.items() if v == self.variable_adresses[variable]][0]
-      if varToCheck.is_initiated:
-        code = Code(f'PUT {self.variable_adresses[variable]}')
-      else:
-        Errors.uninitiated(varToCheck.name, l)
-    else:
-      Errors.undeclared(variable.name, l)
+    var_address = self.symbol_table.getVariableAdress(variable, l)
+    if not self.symbol_table.isVarInitiated(var_address, l):
+      Errors.uninitiated(variable.name, l)
+    code = Code(f'PUT {var_address}')
     codes = [code]
     return codes
 
@@ -172,10 +193,7 @@ class CodeGenerator:
 
   def __declarations_main(self, x, l):
     variable = Variable(x, True)
-    if variable in self.variable_adresses:
-      Errors.redeclaration(variable.name, l)
-    self.variable_adresses[variable] = self.first_adress
-    self.first_adress += 1
+    self.symbol_table.addVariable(variable, l)
     codes = []
     return codes
 
@@ -198,7 +216,3 @@ class CodeGenerator:
 
   def __commands(self, x, l):
     return x
-
-
-  # def __command_write(x, l):
-  #   return
