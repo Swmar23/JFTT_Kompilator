@@ -38,11 +38,11 @@ class MyParser(Parser):
   # main *************************************
   @_('PROGRAM IS VAR declarations_main BEGIN commands END')
   def main(self, t):
-    return self.code_generator.generate_code(Command.MAIN, (t.declarations_main, t.commands), t.lineno)
+    return self.code_generator.generate_code(Command.MAIN_VAR, (t.declarations_main, t.commands), t.lineno)
 
   @_('PROGRAM IS BEGIN commands END')
   def main(self, t):
-    pass
+    return self.code_generator.generate_code(Command.MAIN, (None, t.commands), t.lineno)
 
   # commands **********************************
   @_('commands command')
@@ -68,7 +68,7 @@ class MyParser(Parser):
 
   @_('WHILE condition DO commands ENDWHILE')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_WHILE, (t.condition, t.commands), t.lineno)
 
   @_('REPEAT commands UNTIL condition SEMICOLON')
   def command(self, t):

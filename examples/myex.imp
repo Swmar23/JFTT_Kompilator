@@ -1,12 +1,11 @@
 PROGRAM IS
-VAR a, b, c
+VAR a, b
 BEGIN
   READ a;
   READ b;
-  IF a <= b THEN
-    c := 1;
-  ELSE
-    c := 0;
-  ENDIF
-  WRITE c;
+  WHILE a > 0 DO
+    a := a - 1;
+    b := b + 1;
+  ENDWHILE
+  WRITE b;
 END
