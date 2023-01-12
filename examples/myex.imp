@@ -1,8 +1,16 @@
 PROGRAM IS
-VAR a, b, c
+VAR a, b, c, d, e
 BEGIN
-  READ a;
-  READ b;
-  c := a - b;
+  a:=2100;
+  b:=37;
+  c:=2100;
+  d:=a-b;
+  e:=0-c;
+
+  WRITE a;
+  WRITE b;
   WRITE c;
+  WRITE d;
+  WRITE e;
+  WRITE 420;
 END

@@ -25,7 +25,7 @@ class Errors:
 
 class Variable:
 
-  def __init__(self, name, in_main, is_initiated=False):
+  def __init__(self, name:str, in_main, is_initiated=False):
     self.name = name
     self.in_main = in_main
     self.is_initiated = is_initiated
@@ -184,7 +184,8 @@ class CodeGenerator:
     if not self.symbol_table.isVarInitiated(var_address, l):
       Errors.uninitiated(variable.name, l)
     code = Code(f'PUT {var_address}')
-    codes = [code]
+    codes = x[0]
+    codes += [code]
     return codes
 
   def __command_assign(self, x, l):
@@ -199,9 +200,16 @@ class CodeGenerator:
     return codes
 
   def __value_identifier(self, x, l):
+    return [], x
+
+  def __value_num(self, x, l):
     codes = []
-    value_identifier = x
-    return codes, value_identifier
+    if not(Variable(x, True, True) in self.symbol_table.addresses_main):
+      self.symbol_table.addVariable(Variable(x, True, True), l)
+      address = self.symbol_table.getVariableAdress(Variable(x, True), l)
+      codes += [Code(f'SET {x}')]
+      codes += [Code(f'STORE {address}')]
+    return codes, x
 
   def __expression_value(self, x, l):
     (codes, info) = x
@@ -215,7 +223,11 @@ class CodeGenerator:
     (value1_data, value2_data) = x
     value1_info = value1_data[1]
     value2_info = value2_data[1]
+    value1_codes = value1_data[0]
+    value2_codes = value2_data[0]
     codes = []
+    codes += value1_codes
+    codes += value2_codes
     var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address, l):
       Errors.uninitiated(value1_info, l)
@@ -230,7 +242,11 @@ class CodeGenerator:
     (value1_data, value2_data) = x
     value1_info = value1_data[1]
     value2_info = value2_data[1]
+    value1_codes = value1_data[0]
+    value2_codes = value2_data[0]
     codes = []
+    codes += value1_codes
+    codes += value2_codes
     var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address, l):
       Errors.uninitiated(value1_info, l)

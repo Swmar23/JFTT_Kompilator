@@ -182,7 +182,7 @@ class MyParser(Parser):
   # value ******************************************
   @_('NUM')
   def value(self, t):
-    pass
+    return self.code_generator.generate_code(Command.VALUE_NUM, t.NUM, t.lineno)
 
   @_('IDENTIFIER')
   def value(self, t):
