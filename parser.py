@@ -57,7 +57,7 @@ class MyParser(Parser):
   # command ************************************
   @_('IDENTIFIER ASSIGN expression SEMICOLON')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_ASSIGN, (t.IDENTIFIER, t.expression), t.lineno)
   
   @_('IF condition THEN commands ELSE commands ENDIF')
   def command(self, t):
@@ -132,15 +132,15 @@ class MyParser(Parser):
   # expression *******************************************
   @_('value')
   def expression(self, t):
-    pass
+    return self.code_generator.generate_code(Command.EXPRESSION_VALUE, t.value, t.lineno)
 
   @_('value PLUS value')
   def expression(self, t):
-    pass
+    return self.code_generator.generate_code(Command.EXPRESSION_PLUS, (t.value0, t.value1), t.lineno)
 
   @_('value MINUS value')
   def expression(self, t):
-    pass
+    return self.code_generator.generate_code(Command.EXPRESSION_MINUS, (t.value0, t.value1), t.lineno)
 
   @_('value TIMES value')
   def expression(self, t):

@@ -154,6 +154,7 @@ class CodeGenerator:
       Command.DECLARATIONS_MAIN: lambda x, l: self.__declarations_main(x, l),
       Command.DECLARATIONS_CALL_LONG: lambda x, l: self.__declarations_call_long(x, l),
       Command.DECLARATIONS_CALL: lambda x, l: self.__declarations_call(x, l),
+      Command.EXPRESSION_VALUE: lambda x, l: self.__expression_value(x, l),
       Command.EXPRESSION_PLUS: lambda x, l: self.__expression_plus(x, l),
       Command.EXPRESSION_MINUS: lambda x, l: self.__expression_minus(x, l),
       Command.EXPRESSION_TIMES: lambda x, l: self.__expression_times(x, l),
@@ -186,10 +187,59 @@ class CodeGenerator:
     codes = [code]
     return codes
 
+  def __command_assign(self, x, l):
+    codes = []
+    (identifier_info, expression_data) = x
+    expression_code = expression_data[0]
+    # expression_info = expression_data[1]
+    var_address = self.symbol_table.getVariableAdress(Variable(identifier_info, True), l)
+    self.symbol_table.initiateVariable(Variable(identifier_info, True), l)
+    codes += expression_code
+    codes += [Code(f'STORE {var_address}')]
+    return codes
+
   def __value_identifier(self, x, l):
     codes = []
     value_identifier = x
     return codes, value_identifier
+
+  def __expression_value(self, x, l):
+    (codes, info) = x
+    var_address = self.symbol_table.getVariableAdress(Variable(info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address, l):
+      Errors.uninitiated(info, l)
+    codes += [Code(f'LOAD {var_address}')]
+    return codes, info
+
+  def __expression_plus(self, x, l):
+    (value1_data, value2_data) = x
+    value1_info = value1_data[1]
+    value2_info = value2_data[1]
+    codes = []
+    var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address, l):
+      Errors.uninitiated(value1_info, l)
+    codes += [Code(f'LOAD {var_address}')]
+    var_adress = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_adress, l):
+      Errors.uninitiated(value2_info, l)
+    codes += [Code(f'ADD {var_adress}')]
+    return codes, value2_info
+
+  def __expression_minus(self, x, l):
+    (value1_data, value2_data) = x
+    value1_info = value1_data[1]
+    value2_info = value2_data[1]
+    codes = []
+    var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_address, l):
+      Errors.uninitiated(value1_info, l)
+    codes += [Code(f'LOAD {var_address}')]
+    var_adress = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    if not self.symbol_table.isVarInitiated(var_adress, l):
+      Errors.uninitiated(value2_info, l)
+    codes += [Code(f'SUB {var_adress}')]
+    return codes, value2_info
 
   def __declarations_main(self, x, l):
     variable = Variable(x, True)

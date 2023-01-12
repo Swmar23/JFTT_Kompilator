@@ -1,8 +1,8 @@
 PROGRAM IS
-VAR n, p
+VAR a, b, c
 BEGIN
-  READ n;
-  READ p; 
-  WRITE p;
-  WRITE n;
+  READ a;
+  READ b;
+  c := a - b;
+  WRITE c;
 END
