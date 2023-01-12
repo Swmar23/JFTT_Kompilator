@@ -61,11 +61,11 @@ class MyParser(Parser):
   
   @_('IF condition THEN commands ELSE commands ENDIF')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_IF_ELSE, (t.condition, t.commands0, t.commands1), t.lineno)
 
   @_('IF condition THEN commands ENDIF')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_IF, (t.condition, t.commands), t.lineno)
 
   @_('WHILE condition DO commands ENDWHILE')
   def command(self, t):
@@ -157,11 +157,12 @@ class MyParser(Parser):
   # condition **********************************************
   @_('value EQ value')
   def condition(self, t):
-    pass
+    return self.code_generator.generate_code(Command.CONDITION_EQ, (t.value0, t.value1), t.lineno)
 
   @_('value NEQ value')
   def condition(self, t):
     pass
+    return self.code_generator.generate_code(Command.CONDITION_NEQ, (t.value0, t.value1), t.lineno)
 
   @_('value GT value')
   def condition(self, t):

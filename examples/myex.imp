@@ -1,16 +1,12 @@
 PROGRAM IS
-VAR a, b, c, d, e
+VAR a, b, c
 BEGIN
-  a:=2100;
-  b:=37;
-  c:=2100;
-  d:=a-b;
-  e:=0-c;
-
-  WRITE a;
-  WRITE b;
+  READ a;
+  READ b;
+  IF a != b THEN
+    c := 0;
+  ELSE
+    c := 1;
+  ENDIF
   WRITE c;
-  WRITE d;
-  WRITE e;
-  WRITE 420;
 END
