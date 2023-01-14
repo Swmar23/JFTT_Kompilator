@@ -1,0 +1,43 @@
+a * b
+LOAD a
+STORE POM_a
+LOAD b
+STORE POM_b
+SET 1
+STORE POM_1 [jeśli nie ma]
+LOAD POM_b
+HALF POM_b
+STORE POM_help
+ADD POM_help
+STORE POM_help
+LOAD POM_b
+SUB POM_help
+JPOS 23
+LOAD POM_a [gdy b % 2 == 0]
+ADD POM_a
+STORE POM_a
+LOAD POM_b
+HALF
+STORE POM_b
+JPOS 9     [skok gdy b > 0]
+JUMP 31
+LOAD POM_a [gdy b % 2 == 1]
+ADD a
+STORE POM_a
+LOAD POM_b
+SUB POM_1
+STORE POM_b
+JPOS 9     [skok gdy b > 0]
+
+
+
+
+
+
+
+
+
+
+
+
+

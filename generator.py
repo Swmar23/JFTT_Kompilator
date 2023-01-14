@@ -106,13 +106,13 @@ class SymbolTable:
     self.addresses_main = []
     self.first_address_main = 1
   
-  def getVariableAdress(self, variable: Variable, lineno):
+  def getVariableAddress(self, variable: Variable, lineno):
     for var in self.addresses_main:
       if variable == var:
         return self.addresses_main.index(var) + 1
     Errors.undeclared(variable.name, lineno)
 
-  def getVariableFromAdress(self, address) -> Variable:
+  def getVariableFromAddress(self, address) -> Variable:
     return self.addresses_main[address-1]
   
   def addVariable(self, variable: Variable, lineno):
@@ -122,7 +122,7 @@ class SymbolTable:
     self.first_address_main += 1
   
   def initiateVariable(self, variable: Variable, lineno):
-    var = self.getVariableFromAdress(self.getVariableAdress(variable, lineno))
+    var = self.getVariableFromAddress(self.getVariableAddress(variable, lineno))
     var.is_initiated = True
 
   def isVarInitiated(self, address, lineno):
@@ -187,7 +187,7 @@ class CodeGenerator:
 
   def __command_read(self, x, l):
     variable = Variable(x, True, True)
-    var_address = self.symbol_table.getVariableAdress(variable, l)
+    var_address = self.symbol_table.getVariableAddress(variable, l)
     code = Code(f'GET {var_address}' )
     self.symbol_table.initiateVariable(variable, l)
     codes = [code]
@@ -195,7 +195,7 @@ class CodeGenerator:
 
   def __command_write(self, x, l):
     variable = Variable(x[1], True, True)
-    var_address = self.symbol_table.getVariableAdress(variable, l)
+    var_address = self.symbol_table.getVariableAddress(variable, l)
     if not self.symbol_table.isVarInitiated(var_address, l):
       Errors.uninitiated(variable.name, l)
     code = Code(f'PUT {var_address}')
@@ -208,7 +208,7 @@ class CodeGenerator:
     (identifier_info, expression_data) = x
     expression_code = expression_data[0]
     # expression_info = expression_data[1]
-    var_address = self.symbol_table.getVariableAdress(Variable(identifier_info, True), l)
+    var_address = self.symbol_table.getVariableAddress(Variable(identifier_info, True), l)
     self.symbol_table.initiateVariable(Variable(identifier_info, True), l)
     codes += expression_code
     codes += [Code(f'STORE {var_address}')]
@@ -221,14 +221,14 @@ class CodeGenerator:
     codes = []
     if not(Variable(x, True, True) in self.symbol_table.addresses_main):
       self.symbol_table.addVariable(Variable(x, True, True), l)
-      address = self.symbol_table.getVariableAdress(Variable(x, True), l)
+      address = self.symbol_table.getVariableAddress(Variable(x, True), l)
       codes += [Code(f'SET {x}')]
       codes += [Code(f'STORE {address}')]
     return codes, x
 
   def __expression_value(self, x, l):
     (codes, info) = x
-    var_address = self.symbol_table.getVariableAdress(Variable(info, True), l)
+    var_address = self.symbol_table.getVariableAddress(Variable(info, True), l)
     if not self.symbol_table.isVarInitiated(var_address, l):
       Errors.uninitiated(info, l)
     codes += [Code(f'LOAD {var_address}')]
@@ -243,11 +243,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'LOAD {var_address}')]
-    var_adress = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_adress = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_adress, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'ADD {var_adress}')]
@@ -262,11 +262,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'LOAD {var_address}')]
-    var_adress = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_adress = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_adress, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'SUB {var_adress}')]
@@ -281,14 +281,14 @@ class CodeGenerator:
     codes = []
     if (value2_info == '2'):
       codes += value1_codes
-      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      var_address = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
       if not self.symbol_table.isVarInitiated(var_address, l):
         Errors.uninitiated(value1_info, l)
       codes += [Code(f'LOAD {var_address}')]
       codes += [Code(f'ADD {var_address}')]
     elif (value1_info == '2'):
       codes += value2_codes
-      var_address = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+      var_address = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
       if not self.symbol_table.isVarInitiated(var_address, l):
         Errors.uninitiated(value2_info, l)
       codes += [Code(f'LOAD {var_address}')]
@@ -297,19 +297,60 @@ class CodeGenerator:
       codes += [Code(f'SET 0')]
     elif (value2_info == '1'):
       codes += value1_codes
-      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      var_address = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
       if not self.symbol_table.isVarInitiated(var_address, l):
         Errors.uninitiated(value1_info, l)
       codes += [Code(f'LOAD {var_address}')]
     elif (value1_info == '1'):
       codes += value2_codes
-      var_address = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+      var_address = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
       if not self.symbol_table.isVarInitiated(var_address, l):
         Errors.uninitiated(value2_info, l)
       codes += [Code(f'LOAD {var_address}')]
     else:
-      print("nie umiem mnozyc :(")
-      exit(69)
+      codes += value1_codes
+      codes += value2_codes
+      if not (Variable('POM_a_mult', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_a_mult', True, True), l)
+      address_pom_a = self.symbol_table.getVariableAddress(Variable ('POM_a_mult', True), l)
+      if not (Variable('POM_b_mult', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_b_mult', True, True), l)
+      address_pom_b = self.symbol_table.getVariableAddress(Variable ('POM_b_mult', True), l)
+      if not (Variable('POM_res_mult', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_res_mult', True, True), l)
+      address_pom_res = self.symbol_table.getVariableAddress(Variable ('POM_res_mult', True), l)
+      if not (Variable('POM_help_mult', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_help_mult', True, True), l)
+      address_pom_help = self.symbol_table.getVariableAddress(Variable ('POM_help_mult', True), l)
+      address_a = self.symbol_table.getVariableAddress(Variable (value1_info, True), l)
+      address_b = self.symbol_table.getVariableAddress(Variable (value2_info, True), l)
+      codes += [Code(f'LOAD {address_a}')]
+      codes += [Code(f'JZERO', 26)]      #wyskocz gdy a = 0!!!
+      codes += [Code(f'STORE {address_pom_a}')]
+      codes += [Code(f'LOAD {address_b}')]
+      codes += [Code(f'JZERO', 23)]      #wyskocz gdy b = 0!!!
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'SET 0')]
+      codes += [Code(f'STORE {address_pom_res}')] # result = 0
+      codes += [Code(f'LOAD {address_pom_b}')] 
+      codes += [Code('HALF')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'ADD {address_pom_help}')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'SUB {address_pom_help}')] 
+      codes += [Code(f'JZERO', 4)] # sprawdzenie czy b % 2 == 0
+      codes += [Code(f'LOAD {address_pom_res}')] # tylko gdy b % 2 != 0
+      codes += [Code(f'ADD {address_pom_a}')]
+      codes += [Code(f'STORE {address_pom_res}')] # result += pom_a
+      codes += [Code(f'LOAD {address_pom_a}')] # to już w obu przypadkach modulo
+      codes += [Code(f'ADD {address_pom_a}')] 
+      codes += [Code(f'STORE {address_pom_a}')] # pom_a *= 2
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_b}')] # pom_b /= 2
+      codes += [Code(f'JPOS', -16)]   # gdy pom_b > 0  to powtarzamy procedure
+      codes += [Code(f'LOAD {address_pom_res}')] # gdy pom_b = 0 to wczytujemy wynik
     return codes, value2_info
   
   def __expression_div(self, x, l):
@@ -323,13 +364,13 @@ class CodeGenerator:
       codes += [Code(f'SET 0')]
     elif (value2_info == '1'):
       codes += value1_codes
-      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      var_address = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
       if not self.symbol_table.isVarInitiated(var_address, l):
         Errors.uninitiated(value1_info, l)
       codes += [Code(f'LOAD {var_address}')]
     elif (value2_info == '2'):
       codes += value1_codes
-      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      var_address = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
       if not self.symbol_table.isVarInitiated(var_address, l):
         Errors.uninitiated(value1_info, l)
       codes += [Code(f'LOAD {var_address}')]
@@ -388,11 +429,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address1 = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address1, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'LOAD {var_address1}')]
-    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_address2 = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address2, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'SUB {var_address2}')]
@@ -409,11 +450,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address1 = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address1, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'LOAD {var_address1}')]
-    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_address2 = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address2, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'SUB {var_address2}')]
@@ -431,11 +472,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address1 = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address1, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'LOAD {var_address1}')]
-    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_address2 = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address2, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'SUB {var_address2}')]
@@ -450,11 +491,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_address2 = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address2, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'LOAD {var_address2}')]
-    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address1 = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address1, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'SUB {var_address1}')]
@@ -469,11 +510,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address1 = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address1, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'LOAD {var_address1}')]
-    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_address2 = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address2, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'SUB {var_address2}')]
@@ -490,11 +531,11 @@ class CodeGenerator:
     codes = []
     codes += value1_codes
     codes += value2_codes
-    var_address2 = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+    var_address2 = self.symbol_table.getVariableAddress(Variable(value2_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address2, l):
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'LOAD {var_address2}')]
-    var_address1 = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+    var_address1 = self.symbol_table.getVariableAddress(Variable(value1_info, True), l)
     if not self.symbol_table.isVarInitiated(var_address1, l):
       Errors.uninitiated(value1_info, l)
     codes += [Code(f'SUB {var_address1}')]
