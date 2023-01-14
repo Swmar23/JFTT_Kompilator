@@ -128,6 +128,13 @@ class SymbolTable:
   def isVarInitiated(self, address, lineno):
     var = self.addresses_main[address-1]
     return var.is_initiated
+
+  def removeVariable(self, address):
+    if address < len(self.addresses_main):
+      del self.addresses_main[address]
+    else:
+      print("skopane")
+      exit(420)
     
 
 class CodeGenerator:
@@ -264,6 +271,86 @@ class CodeGenerator:
       Errors.uninitiated(value2_info, l)
     codes += [Code(f'SUB {var_adress}')]
     return codes, value2_info
+  
+  def __expression_times(self, x, l):
+    (value1_data, value2_data) = x
+    value1_info = value1_data[1]
+    value2_info = value2_data[1]
+    value1_codes = value1_data[0]
+    value2_codes = value2_data[0]
+    codes = []
+    if (value2_info == '2'):
+      codes += value1_codes
+      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      if not self.symbol_table.isVarInitiated(var_address, l):
+        Errors.uninitiated(value1_info, l)
+      codes += [Code(f'LOAD {var_address}')]
+      codes += [Code(f'ADD {var_address}')]
+    elif (value1_info == '2'):
+      codes += value2_codes
+      var_address = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+      if not self.symbol_table.isVarInitiated(var_address, l):
+        Errors.uninitiated(value2_info, l)
+      codes += [Code(f'LOAD {var_address}')]
+      codes += [Code(f'ADD {var_address}')]
+    elif (value1_info == '0' or value2_info == '0'):
+      codes += [Code(f'SET 0')]
+    elif (value2_info == '1'):
+      codes += value1_codes
+      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      if not self.symbol_table.isVarInitiated(var_address, l):
+        Errors.uninitiated(value1_info, l)
+      codes += [Code(f'LOAD {var_address}')]
+    elif (value1_info == '1'):
+      codes += value2_codes
+      var_address = self.symbol_table.getVariableAdress(Variable(value2_info, True), l)
+      if not self.symbol_table.isVarInitiated(var_address, l):
+        Errors.uninitiated(value2_info, l)
+      codes += [Code(f'LOAD {var_address}')]
+    else:
+      print("nie umiem mnozyc :(")
+      exit(69)
+    return codes, value2_info
+  
+  def __expression_div(self, x, l):
+    (value1_data, value2_data) = x
+    value1_info = value1_data[1]
+    value2_info = value2_data[1]
+    value1_codes = value1_data[0]
+    value2_codes = value2_data[0]
+    codes = []  
+    if (value2_info == '0'):
+      codes += [Code(f'SET 0')]
+    elif (value2_info == '1'):
+      codes += value1_codes
+      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      if not self.symbol_table.isVarInitiated(var_address, l):
+        Errors.uninitiated(value1_info, l)
+      codes += [Code(f'LOAD {var_address}')]
+    elif (value2_info == '2'):
+      codes += value1_codes
+      var_address = self.symbol_table.getVariableAdress(Variable(value1_info, True), l)
+      if not self.symbol_table.isVarInitiated(var_address, l):
+        Errors.uninitiated(value1_info, l)
+      codes += [Code(f'LOAD {var_address}')]
+      codes += [Code(f'HALF')]
+    else:
+      print("nie umiem dzielic :(")
+      exit(2137)
+    return codes, value2_info
+  def __expression_mod(self, x, l):
+    (value1_data, value2_data) = x
+    value1_info = value1_data[1]
+    value2_info = value2_data[1]
+    value1_codes = value1_data[0]
+    value2_codes = value2_data[0]
+    codes = []  
+    if (value2_info == '0') or (value2_info == '1'):
+      codes += [Code(f'SET 0')]
+    else:
+      print("nie umiem w modulo :(")
+      exit(2137)
+    return codes, value2_codes
 
   def __declarations_main(self, x, l):
     variable = Variable(x, True)

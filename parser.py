@@ -143,15 +143,15 @@ class MyParser(Parser):
 
   @_('value TIMES value')
   def expression(self, t):
-    pass
+    return self.code_generator.generate_code(Command.EXPRESSION_TIMES, (t.value0, t.value1), t.lineno)
 
   @_('value DIV value')
   def expression(self, t):
-    pass
+    return self.code_generator.generate_code(Command.EXPRESSION_DIV, (t.value0, t.value1), t.lineno)
 
   @_('value MOD value')
   def expression(self, t):
-    pass
+    return self.code_generator.generate_code(Command.EXPRESSION_MOD, (t.value0, t.value1), t.lineno)
 
   # condition **********************************************
   @_('value EQ value')
