@@ -6,6 +6,6 @@ BEGIN
   REPEAT
     a := a - 1;
     b := b + 1;
-  UNTIL a >= 3;
+  UNTIL a <= 0;
   WRITE b;
 END
