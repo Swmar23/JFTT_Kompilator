@@ -39,6 +39,12 @@ class Variable:
   def __ne__(self, other):
         return not(self == other)
 
+class Labeler:
+  __label_no = 0
+
+  def new_label(self, string:str):
+    self.__label_no += 1
+    return str + f'_l{self.__label_no}'
 
 class Command(enum.Enum):
   PROGRAM_HALT = 1
@@ -141,6 +147,7 @@ class CodeGenerator:
 
   def __init__(self):
     self.symbol_table = SymbolTable()
+    self.labeler = Labeler()
 
   # procedure_addresses = {}
 
@@ -310,18 +317,18 @@ class CodeGenerator:
     else:
       codes += value1_codes
       codes += value2_codes
-      if not (Variable('POM_a_mult', True) in  self.symbol_table.addresses_main):
-        self.symbol_table.addVariable(Variable('POM_a_mult', True, True), l)
-      address_pom_a = self.symbol_table.getVariableAddress(Variable ('POM_a_mult', True), l)
-      if not (Variable('POM_b_mult', True) in  self.symbol_table.addresses_main):
-        self.symbol_table.addVariable(Variable('POM_b_mult', True, True), l)
-      address_pom_b = self.symbol_table.getVariableAddress(Variable ('POM_b_mult', True), l)
-      if not (Variable('POM_res_mult', True) in  self.symbol_table.addresses_main):
-        self.symbol_table.addVariable(Variable('POM_res_mult', True, True), l)
-      address_pom_res = self.symbol_table.getVariableAddress(Variable ('POM_res_mult', True), l)
-      if not (Variable('POM_help_mult', True) in  self.symbol_table.addresses_main):
-        self.symbol_table.addVariable(Variable('POM_help_mult', True, True), l)
-      address_pom_help = self.symbol_table.getVariableAddress(Variable ('POM_help_mult', True), l)
+      if not (Variable('POM_a', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_a', True, True), l)
+      address_pom_a = self.symbol_table.getVariableAddress(Variable ('POM_a', True), l)
+      if not (Variable('POM_b', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_b', True, True), l)
+      address_pom_b = self.symbol_table.getVariableAddress(Variable ('POM_b', True), l)
+      if not (Variable('POM_res', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_res', True, True), l)
+      address_pom_res = self.symbol_table.getVariableAddress(Variable ('POM_res', True), l)
+      if not (Variable('POM_help', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_help', True, True), l)
+      address_pom_help = self.symbol_table.getVariableAddress(Variable ('POM_help', True), l)
       address_a = self.symbol_table.getVariableAddress(Variable (value1_info, True), l)
       address_b = self.symbol_table.getVariableAddress(Variable (value2_info, True), l)
       codes += [Code(f'LOAD {address_a}')]
@@ -349,7 +356,7 @@ class CodeGenerator:
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'HALF')]
       codes += [Code(f'STORE {address_pom_b}')] # pom_b /= 2
-      codes += [Code(f'JPOS', -16)]   # gdy pom_b > 0  to powtarzamy procedure
+      codes += [Code(f'JPOS', -16, )]   # gdy pom_b > 0  to powtarzamy procedure
       codes += [Code(f'LOAD {address_pom_res}')] # gdy pom_b = 0 to wczytujemy wynik
     return codes, value2_info
   
@@ -376,9 +383,79 @@ class CodeGenerator:
       codes += [Code(f'LOAD {var_address}')]
       codes += [Code(f'HALF')]
     else:
-      print("nie umiem dzielic :(")
-      exit(2137)
+      codes += value1_codes
+      codes += value2_codes
+      if not (Variable('POM_a', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_a', True, True), l)
+      address_pom_a = self.symbol_table.getVariableAddress(Variable ('POM_a', True), l)
+      if not (Variable('POM_b', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_b', True, True), l)
+      address_pom_b = self.symbol_table.getVariableAddress(Variable ('POM_b', True), l)
+      address_a = self.symbol_table.getVariableAddress(Variable (value1_info, True), l)
+      address_b = self.symbol_table.getVariableAddress(Variable (value2_info, True), l)
+      codes += [Code(f'LOAD {address_a}')]
+      codes += [Code(f'JZERO', 52)]      #wyskocz gdy a = 0!!!
+      codes += [Code(f'STORE {address_pom_a}')]
+      codes += [Code(f'LOAD {address_b}')]
+      codes += [Code(f'JZERO', 49)]      #wyskocz gdy b = 0!!!
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JZERO', 3)]     # gdy a >=b to spoko, działamy
+      codes += [Code(f'SET 0')]
+      codes += [Code(f'JUMP', 43)]    #wyskocz gdy b > a!!! z wynikiem 0
+      if not (Variable('POM_res', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_res', True, True), l)
+      address_pom_res = self.symbol_table.getVariableAddress(Variable ('POM_res', True), l)
+      if not (Variable('POM_help', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_help', True, True), l)
+      address_pom_help = self.symbol_table.getVariableAddress(Variable ('POM_help', True), l)
+      codes += [Code(f'SET 1')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'SET 0')]
+      codes += [Code(f'STORE {address_pom_res}')]
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'ADD {address_pom_b}')]
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_help}')]
+      codes += [Code(f'ADD {address_pom_help}')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'LOAD {address_pom_a}')]
+      codes += [Code(f'SUB {address_pom_b}')]
+      codes += [Code(f'JPOS', -8)] # gdy pom_b < pom_a to podwajamy pom_b dalej
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JZERO', 9)] # gdy pom_a == pom_b to nie ma sensu połowić pom_b, jest idealnie
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_help}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'LOAD {address_pom_a}')]
+      codes += [Code(f'SUB {address_pom_b}')]
+      codes += [Code(f'STORE {address_pom_a}')] # pom_a = pom_a - b
+      codes += [Code(f'LOAD {address_pom_res}')]
+      codes += [Code(f'ADD {address_pom_help}')]
+      codes += [Code(f'STORE {address_pom_res}')]
+      codes += [Code(f'LOAD {address_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JPOS', 11, 'problematycznyjpos_div')] # gdy b > pom_a to mamy już koniec dzielenia, wynik i reszte
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_help}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_help}')] # zmniejszamy o pół pom_b i pom_help
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JZERO', -17)]  # gdy pom_a >= pom_b to zapisujemy
+      codes += [Code(f'JUMP', -12)]  # gdy pom_a < pom_b to zmniejszamy pom_b
+      codes += [Code(f'LOAD {address_pom_res}')] # wynik dzielenia jest w pom_res
+      # print("nie umiem dzielic :(")
+      # exit(2137)
     return codes, value2_info
+
   def __expression_mod(self, x, l):
     (value1_data, value2_data) = x
     value1_info = value1_data[1]

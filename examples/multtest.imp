@@ -1,8 +1,12 @@
 PROGRAM IS
-VAR a, b, c
+VAR a, b, c, d
 BEGIN
   READ a;
   READ b;
   c := a * b;
+  d := a / b;
+  WRITE a;
+  WRITE b;
   WRITE c;
+  WRITE d;
 END
