@@ -696,9 +696,14 @@ class CodeGenerator:
     commands_code_length = len(commands_codes)
     if condition_info == Command.CONDITION_EQ:
       condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = commands_code_length + 4
+      condition_codes[condition_codes.index(Code(f'JPOS', commands_code_length + 4))].label = self.labeler.new_label('if_eq_JPOS1')
       condition_codes[condition_codes.index(Code(f'JPOS', -1))].offset = commands_code_length + 1
+      condition_codes[condition_codes.index(Code(f'JPOS', commands_code_length + 1))].label = self.labeler.new_label('if_eq_JPOS2')
     elif condition_info == Command.CONDITION_NEQ:
       condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = commands_code_length + 1
+      condition_codes[condition_codes.index(Code(f'JUMP', commands_code_length + 1))].label = self.labeler.new_label('if_neq_JUMP1')
+      condition_codes[condition_codes.index(Code(f'JPOS', 5))].label = self.labeler.new_label('if_neq_JPOS1')
+      condition_codes[condition_codes.index(Code(f'JPOS', 2))].label = self.labeler.new_label('if_neq_JPOS2')
     elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
       condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = commands_code_length + 1
     elif condition_info == Command.CONDITION_GEQ or condition_info == Command.CONDITION_LEQ:
@@ -755,20 +760,14 @@ class CodeGenerator:
     commands_code_length = len(commands_codes)
     condition_codes_length = len(condition_codes)
     if condition_info == Command.CONDITION_EQ:
-      condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = 4
-      condition_codes[condition_codes.index(Code(f'JPOS', -1))].name = f'JZERO'
-      condition_codes[condition_codes.index(Code(f'JZERO', -1))].offset = -commands_code_length - condition_codes_length + 1
+      condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = -commands_code_length - condition_codes_length + 4
+      condition_codes[condition_codes.index(Code(f'JPOS', -1))].offset = -commands_code_length - condition_codes_length + 1
     elif condition_info == Command.CONDITION_NEQ:
-      condition_codes[condition_codes.index(Code(f'JPOS', 2))].offset = -commands_code_length - condition_codes_length + 2
-      condition_codes[condition_codes.index(Code(f'JPOS', 5))].offset = -commands_code_length - condition_codes_length + 5
-      del condition_codes[condition_codes.index(Code(f'JUMP', 0))]
+      condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = -commands_code_length - condition_codes_length + 1
     elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
-      condition_codes[condition_codes.index(Code(f'JPOS', 2))].offset = -commands_code_length - condition_codes_length + 2
-      del condition_codes[condition_codes.index(Code(f'JUMP', 0))]
+      condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = -commands_code_length - condition_codes_length + 1
     elif condition_info == Command.CONDITION_GEQ or condition_info == Command.CONDITION_LEQ:
-      condition_codes[condition_codes.index(Code(f'JPOS', 4))].offset = -commands_code_length - condition_codes_length + 4
-      condition_codes[condition_codes.index(Code(f'JPOS', 0))].name = f'JZERO'
-      condition_codes[condition_codes.index(Code(f'JZERO', 0))].offset = -commands_code_length - condition_codes_length + 1
+      condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = -commands_code_length - condition_codes_length + 1
     codes += commands_codes
     codes += condition_codes
     return codes
