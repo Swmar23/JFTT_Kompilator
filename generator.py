@@ -25,11 +25,12 @@ class Errors:
 
 class Variable:
 
-  def __init__(self, name:str, origin:str, is_initiated=False, is_local=False):
+  def __init__(self, name:str, origin:str, is_initiated=False, is_local=False, is_indirect=False):
     self.name = name
     self.origin = origin
     self.is_initiated = is_initiated
     self.is_local = is_local
+    self.is_indirect = is_indirect
 
   def __hash__(self):
     return hash((self.name, self.origin))
@@ -86,6 +87,8 @@ class Command(enum.Enum):
   CONDITION_LEQ = 36
   VALUE_NUM = 37
   VALUE_IDENTIFIER = 38
+  DECLARATIONS_PROC_LOCAL_LONG = 39
+  DECLARATIONS_PROC_LOCAL = 40
 
 class Code:
 
@@ -111,7 +114,7 @@ class SymbolTable:
 
   def __init__(self):
     self.addresses_main = []
-    self.first_address_main = 1
+    self.first_address_main = 2 # 1 dla powrotu z procedury
   
   def getVariableAddress(self, variable: Variable, lineno):
     for var in self.addresses_main:
@@ -151,11 +154,13 @@ class CodeGenerator:
     self.labeler = Labeler()
     self.procedure_addresses = {}
     self.current_proc_name = 'main'
+    self.line_no = 1
 
   def generate_code(self, code, param, lineno):
     return {
       Command.PROGRAM_HALT: lambda x, l: self.__program_halt(x, l),
       Command.PROCEDURES_VAR: lambda x, l: self.__procedures_var(x, l),
+      Command.PROCEDURES: lambda x, l: self.__procedures(x, l),
       Command.PROCEDURES_EMPTY: lambda x, l: self.__procedures_empty(x, l),
       Command.MAIN_VAR: lambda x, l: self.__main(x, l),
       Command.MAIN: lambda x, l: self.__main(x, l),
@@ -173,6 +178,8 @@ class CodeGenerator:
       Command.PROC_HEAD_CALL: lambda x, l: self.__proc_head_call(x, l),
       Command.DECLARATIONS_PROC_LONG: lambda x, l: self.__declarations_proc_long(x, l),
       Command.DECLARATIONS_PROC: lambda x, l: self.__declarations_proc(x, l),
+      Command.DECLARATIONS_PROC_LOCAL_LONG: lambda x, l: self.__declarations_proc_local_long(x, l),
+      Command.DECLARATIONS_PROC_LOCAL: lambda x, l: self.__declarations_proc_local(x, l),
       Command.DECLARATIONS_MAIN_LONG: lambda x, l: self.__declarations_main_long(x, l),
       Command.DECLARATIONS_MAIN: lambda x, l: self.__declarations_main(x, l),
       Command.DECLARATIONS_CALL_LONG: lambda x, l: self.__declarations_call_long(x, l),
@@ -196,19 +203,30 @@ class CodeGenerator:
   def __command_read(self, x, l):
     variable = Variable(x, self.current_proc_name, True)
     var_address = self.symbol_table.getVariableAddress(variable, l)
-    code = Code(f'GET {var_address}' )
-    self.symbol_table.initiateVariable(variable, l)
-    codes = [code]
+    variable = self.symbol_table.getVariableFromAddress(var_address)
+    if variable.is_indirect:
+      codes = []
+      codes += Code(f'GET 0')
+      codes += Code(f'STOREI {var_address}')
+    else:
+      code = Code(f'GET {var_address}' )
+      self.symbol_table.initiateVariable(variable, l)
+      codes = [code]
     return codes
 
   def __command_write(self, x, l):
     variable = Variable(x[1], self.current_proc_name, True)
     var_address = self.symbol_table.getVariableAddress(variable, l)
-    if not self.symbol_table.isVarInitiated(var_address, l):
-      Errors.uninitiated(variable.name, l)
-    code = Code(f'PUT {var_address}')
+    variable = self.symbol_table.getVariableFromAddress(var_address)
     codes = x[0]
-    codes += [code]
+    if variable.is_indirect:
+      codes += Code(f'LOADI {var_address}')
+      codes += Code(f'PUT 0')
+    else:
+      if not self.symbol_table.isVarInitiated(var_address, l):
+        Errors.uninitiated(variable.name, l)
+      code = Code(f'PUT {var_address}')
+      codes += [code]
     return codes
 
   def __command_assign(self, x, l):
@@ -543,6 +561,51 @@ class CodeGenerator:
     self.symbol_table.addVariable(variable, l)
     codes = []
     return codes
+
+  def __declarations_proc(self, x, l):
+    return [x]
+
+  def __declarations_proc_long(self, x, l):
+    variables = x[0]
+    variables += [x[1]]
+    return variables
+  
+  def __declarations_proc_local(self, x, l):
+    variable = Variable(x, self.current_proc_name, is_local=True)
+    self.symbol_table.addVariable(variable, l)
+    return []
+
+  def __declarations_proc_local_long(self, x, l):
+    variable = Variable(x, self.current_proc_name, is_local=True)
+    self.symbol_table.addVariable(variable, l)
+    return []
+
+  def __proc_head_proc(self, x, l):
+    proc_name = x[0]
+    variables = x[1]
+    self.current_proc_name = proc_name
+    for var in variables:
+      variable = Variable(var, proc_name, is_initiated=True, is_indirect=True)
+      self.symbol_table.addVariable(variable)
+    return proc_name
+  
+  def __procedures(self, x, l):
+    previous_procedures_commands = x[0]
+    proc_name = x[1]
+    proc_commands = x[2]
+    self.procedure_addresses[proc_name]=len(previous_procedures_commands)
+    for code in proc_commands:
+      if code.name.startswith('STORE ') or code.name.startswith('LOAD ') or code.name.startswith('ADD ') or code.name.startswith('SUB '):
+        code_type = code.name.split()[0]
+        var_address = int(code.name.split()[1])
+        variable = self.symbol_table.getVariableFromAddress(var_address)
+        if variable.is_indirect == True:
+          code.name = code_type + f'I {var_address}'
+    commands = []
+    commands += previous_procedures_commands
+    commands += proc_commands
+    commands += [Code('JUMPI 1')]
+    return commands
 
   def __main(self, x, l):
     codes = x[1]

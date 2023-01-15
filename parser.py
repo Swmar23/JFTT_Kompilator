@@ -23,17 +23,17 @@ class MyParser(Parser):
     return self.code_generator.generate_code(Command.PROGRAM_HALT, (t.procedures, t.main), t.lineno)
   
   # procedures ******************************
-  @_('procedures PROCEDURE proc_head_proc IS VAR declarations_proc BEGIN commands END')
+  @_('procedures PROCEDURE proc_head_proc IS VAR declarations_proc_local BEGIN commands END')
   def procedures(self, t):
-    pass 
+    return self.code_generator.generate_code(Command.PROCEDURES_VAR, (t.procedures, t.proc_head_proc, t.commands), t.lineno)
 
   @_('procedures PROCEDURE proc_head_proc IS BEGIN commands END')
   def procedures(self, t):
-    pass
+    return self.code_generator.generate_code(Command.PROCEDURES, (t.procedures, t.proc_head_proc, t.commands), t.lineno)
 
   @_('')
   def procedures(self, t):
-    pass
+    return []
   
   # main *************************************
   @_('PROGRAM IS VAR declarations_main BEGIN commands END')
@@ -89,12 +89,7 @@ class MyParser(Parser):
   # proc_head_proc *********************************
   @_('IDENTIFIER LPAREN declarations_proc RPAREN')
   def proc_head_proc(self, t):
-    pass
-
-  # #proc_head_main **********************************
-  # @_('IDENTIFIER LPAREN declarations_main RPAREN')
-  # def proc_head_main(self, t):
-  #   pass
+    return self.code_generator.generate_code(Command.PROC_HEAD_PROC, (t.IDENTIFIER, t.declarations_proc), t.lineno)
 
   # proc_head_call ***********************************
   @_('IDENTIFIER LPAREN declarations_call RPAREN')
@@ -104,11 +99,20 @@ class MyParser(Parser):
   # declarations_proc ********************************
   @_('declarations_proc COMMA IDENTIFIER')
   def declarations_proc(self, t):
-    pass
+    return self.code_generator.generate_code(Command.DECLARATIONS_PROC_LONG, (t.declarations_proc, t.IDENTIFIER), t.lineno)
 
   @_('IDENTIFIER')
   def declarations_proc(self, t):
-    pass
+    return self.code_generator.generate_code(Command.DECLARATIONS_PROC, t.IDENTIFIER, t.lineno)
+
+  # declarations_proc_local ***************************
+  @_('declarations_proc_local COMMA IDENTIFIER')
+  def declarations_proc_local(self, t):
+    return self.code_generator.generate_code(Command.DECLARATIONS_PROC_LOCAL_LONG, t.IDENTIFIER, t.lineno)
+
+  @_('IDENTIFIER')
+  def declarations_proc_local(self, t):
+    return self.code_generator.generate_code(Command.DECLARATIONS_PROC_LOCAL, t.IDENTIFIER, t.lineno)
 
   # declarations_main *********************************
   @_('declarations_main COMMA IDENTIFIER')
