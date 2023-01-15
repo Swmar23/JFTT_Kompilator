@@ -44,7 +44,7 @@ class Labeler:
 
   def new_label(self, string:str):
     self.__label_no += 1
-    return str + f'_l{self.__label_no}'
+    return string + f'_l{self.__label_no}'
 
 class Command(enum.Enum):
   PROGRAM_HALT = 1
@@ -332,10 +332,10 @@ class CodeGenerator:
       address_a = self.symbol_table.getVariableAddress(Variable (value1_info, True), l)
       address_b = self.symbol_table.getVariableAddress(Variable (value2_info, True), l)
       codes += [Code(f'LOAD {address_a}')]
-      codes += [Code(f'JZERO', 26)]      #wyskocz gdy a = 0!!!
+      codes += [Code(f'JZERO', 26, self.labeler.new_label('times_JZERO'))]      #wyskocz gdy a = 0!!!
       codes += [Code(f'STORE {address_pom_a}')]
       codes += [Code(f'LOAD {address_b}')]
-      codes += [Code(f'JZERO', 23)]      #wyskocz gdy b = 0!!!
+      codes += [Code(f'JZERO', 23, self.labeler.new_label('times_JZERO'))]      #wyskocz gdy b = 0!!!
       codes += [Code(f'STORE {address_pom_b}')]
       codes += [Code(f'SET 0')]
       codes += [Code(f'STORE {address_pom_res}')] # result = 0
@@ -346,7 +346,7 @@ class CodeGenerator:
       codes += [Code(f'STORE {address_pom_help}')]
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'SUB {address_pom_help}')] 
-      codes += [Code(f'JZERO', 4)] # sprawdzenie czy b % 2 == 0
+      codes += [Code(f'JZERO', 4, self.labeler.new_label('times_JZERO'))] # sprawdzenie czy b % 2 == 0
       codes += [Code(f'LOAD {address_pom_res}')] # tylko gdy b % 2 != 0
       codes += [Code(f'ADD {address_pom_a}')]
       codes += [Code(f'STORE {address_pom_res}')] # result += pom_a
@@ -356,7 +356,7 @@ class CodeGenerator:
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'HALF')]
       codes += [Code(f'STORE {address_pom_b}')] # pom_b /= 2
-      codes += [Code(f'JPOS', -16, )]   # gdy pom_b > 0  to powtarzamy procedure
+      codes += [Code(f'JPOS', -16, self.labeler.new_label('times_JPOS'))]   # gdy pom_b > 0  to powtarzamy procedure
       codes += [Code(f'LOAD {address_pom_res}')] # gdy pom_b = 0 to wczytujemy wynik
     return codes, value2_info
   
@@ -394,16 +394,16 @@ class CodeGenerator:
       address_a = self.symbol_table.getVariableAddress(Variable (value1_info, True), l)
       address_b = self.symbol_table.getVariableAddress(Variable (value2_info, True), l)
       codes += [Code(f'LOAD {address_a}')]
-      codes += [Code(f'JZERO', 52)]      #wyskocz gdy a = 0!!!
+      codes += [Code(f'JZERO', 52, self.labeler.new_label('div_JZERO'))]      #wyskocz gdy a = 0!!!
       codes += [Code(f'STORE {address_pom_a}')]
       codes += [Code(f'LOAD {address_b}')]
-      codes += [Code(f'JZERO', 49)]      #wyskocz gdy b = 0!!!
+      codes += [Code(f'JZERO', 49, self.labeler.new_label('div_JZERO'))]      #wyskocz gdy b = 0!!!
       codes += [Code(f'STORE {address_pom_b}')]
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'SUB {address_pom_a}')]
-      codes += [Code(f'JZERO', 3)]     # gdy a >=b to spoko, działamy
+      codes += [Code(f'JZERO', 3, self.labeler.new_label('div_JZERO'))]     # gdy a >=b to spoko, działamy
       codes += [Code(f'SET 0')]
-      codes += [Code(f'JUMP', 43)]    #wyskocz gdy b > a!!! z wynikiem 0
+      codes += [Code(f'JUMP', 43, self.labeler.new_label('div_JUMP'))]    #wyskocz gdy b > a!!! z wynikiem 0
       if not (Variable('POM_res', True) in  self.symbol_table.addresses_main):
         self.symbol_table.addVariable(Variable('POM_res', True, True), l)
       address_pom_res = self.symbol_table.getVariableAddress(Variable ('POM_res', True), l)
@@ -422,10 +422,10 @@ class CodeGenerator:
       codes += [Code(f'STORE {address_pom_help}')]
       codes += [Code(f'LOAD {address_pom_a}')]
       codes += [Code(f'SUB {address_pom_b}')]
-      codes += [Code(f'JPOS', -8)] # gdy pom_b < pom_a to podwajamy pom_b dalej
+      codes += [Code(f'JPOS', -8, self.labeler.new_label('div_JPOS'))] # gdy pom_b < pom_a to podwajamy pom_b dalej
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'SUB {address_pom_a}')]
-      codes += [Code(f'JZERO', 9)] # gdy pom_a == pom_b to nie ma sensu połowić pom_b, jest idealnie
+      codes += [Code(f'JZERO', 9, self.labeler.new_label('div_JZERO'))] # gdy pom_a == pom_b to nie ma sensu połowić pom_b, jest idealnie
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'HALF')]
       codes += [Code(f'STORE {address_pom_b}')]
@@ -440,7 +440,7 @@ class CodeGenerator:
       codes += [Code(f'STORE {address_pom_res}')]
       codes += [Code(f'LOAD {address_b}')]
       codes += [Code(f'SUB {address_pom_a}')]
-      codes += [Code(f'JPOS', 11, 'problematycznyjpos_div')] # gdy b > pom_a to mamy już koniec dzielenia, wynik i reszte
+      codes += [Code(f'JPOS', 11,  self.labeler.new_label('div_JPOS'))] # gdy b > pom_a to mamy już koniec dzielenia, wynik i reszte
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'HALF')]
       codes += [Code(f'STORE {address_pom_b}')]
@@ -449,8 +449,8 @@ class CodeGenerator:
       codes += [Code(f'STORE {address_pom_help}')] # zmniejszamy o pół pom_b i pom_help
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'SUB {address_pom_a}')]
-      codes += [Code(f'JZERO', -17)]  # gdy pom_a >= pom_b to zapisujemy
-      codes += [Code(f'JUMP', -12)]  # gdy pom_a < pom_b to zmniejszamy pom_b
+      codes += [Code(f'JZERO', -17, self.labeler.new_label('div_JZERO'))]  # gdy pom_a >= pom_b to zapisujemy
+      codes += [Code(f'JUMP', -12, self.labeler.new_label('div_JUMP'))]  # gdy pom_a < pom_b to zmniejszamy pom_b
       codes += [Code(f'LOAD {address_pom_res}')] # wynik dzielenia jest w pom_res
       # print("nie umiem dzielic :(")
       # exit(2137)
@@ -466,8 +466,75 @@ class CodeGenerator:
     if (value2_info == '0') or (value2_info == '1'):
       codes += [Code(f'SET 0')]
     else:
-      print("nie umiem w modulo :(")
-      exit(2137)
+      codes += value1_codes
+      codes += value2_codes
+      if not (Variable('POM_a', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_a', True, True), l)
+      address_pom_a = self.symbol_table.getVariableAddress(Variable ('POM_a', True), l)
+      if not (Variable('POM_b', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_b', True, True), l)
+      address_pom_b = self.symbol_table.getVariableAddress(Variable ('POM_b', True), l)
+      address_a = self.symbol_table.getVariableAddress(Variable (value1_info, True), l)
+      address_b = self.symbol_table.getVariableAddress(Variable (value2_info, True), l)
+      codes += [Code(f'LOAD {address_a}')]
+      codes += [Code(f'JZERO', 52, self.labeler.new_label('mod_JZERO'))]      #wyskocz gdy a = 0!!!
+      codes += [Code(f'STORE {address_pom_a}')]
+      codes += [Code(f'LOAD {address_b}')]
+      codes += [Code(f'JZERO', 49, self.labeler.new_label('mod_JZERO'))]      #wyskocz gdy b = 0!!!
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JZERO', 3, self.labeler.new_label('mod_JZERO'))]     # gdy a >=b to spoko, działamy
+      codes += [Code(f'SET 0')]
+      codes += [Code(f'JUMP', 43, self.labeler.new_label('mod_JUMP'))]    #wyskocz gdy b > a!!! z wynikiem 0
+      if not (Variable('POM_res', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_res', True, True), l)
+      address_pom_res = self.symbol_table.getVariableAddress(Variable ('POM_res', True), l)
+      if not (Variable('POM_help', True) in  self.symbol_table.addresses_main):
+        self.symbol_table.addVariable(Variable('POM_help', True, True), l)
+      address_pom_help = self.symbol_table.getVariableAddress(Variable ('POM_help', True), l)
+      codes += [Code(f'SET 1')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'SET 0')]
+      codes += [Code(f'STORE {address_pom_res}')]
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'ADD {address_pom_b}')]
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_help}')]
+      codes += [Code(f'ADD {address_pom_help}')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'LOAD {address_pom_a}')]
+      codes += [Code(f'SUB {address_pom_b}')]
+      codes += [Code(f'JPOS', -8, self.labeler.new_label('mod_JPOS'))] # gdy pom_b < pom_a to podwajamy pom_b dalej
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JZERO', 9, self.labeler.new_label('mod_JZERO'))] # gdy pom_a == pom_b to nie ma sensu połowić pom_b, jest idealnie
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_help}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_help}')]
+      codes += [Code(f'LOAD {address_pom_a}')]
+      codes += [Code(f'SUB {address_pom_b}')]
+      codes += [Code(f'STORE {address_pom_a}')] # pom_a = pom_a - b
+      codes += [Code(f'LOAD {address_pom_res}')]
+      codes += [Code(f'ADD {address_pom_help}')]
+      codes += [Code(f'STORE {address_pom_res}')]
+      codes += [Code(f'LOAD {address_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JPOS', 11,  self.labeler.new_label('mod_JPOS'))] # gdy b > pom_a to mamy już koniec dzielenia, wynik i reszte
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_b}')]
+      codes += [Code(f'LOAD {address_pom_help}')]
+      codes += [Code(f'HALF')]
+      codes += [Code(f'STORE {address_pom_help}')] # zmniejszamy o pół pom_b i pom_help
+      codes += [Code(f'LOAD {address_pom_b}')]
+      codes += [Code(f'SUB {address_pom_a}')]
+      codes += [Code(f'JZERO', -17, self.labeler.new_label('mod_JZERO'))]  # gdy pom_a >= pom_b to zapisujemy
+      codes += [Code(f'JUMP', -12, self.labeler.new_label('mod_JUMP'))]  # gdy pom_a < pom_b to zmniejszamy pom_b
+      codes += [Code(f'LOAD {address_pom_a}')] # reszta z dzielenia jest w pom_a
     return codes, value2_codes
 
   def __declarations_main(self, x, l):
