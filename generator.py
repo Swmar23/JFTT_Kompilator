@@ -549,11 +549,13 @@ class CodeGenerator:
 
   def __program_halt(self, x, l):
     strings = []
+    iterator = 0
     for code in x[1]:
       if code.offset != None:
-        code.offset += x[1].index(code) # tutaj to już przestaje być offset
+        code.offset += iterator # tutaj to już przestaje być offset
       string = str(code)
       strings += [string]
+      iterator += 1
     strings += ["HALT"]
     return strings
 
@@ -706,8 +708,12 @@ class CodeGenerator:
       condition_codes[condition_codes.index(Code(f'JPOS', 2))].label = self.labeler.new_label('if_neq_JPOS2')
     elif condition_info == Command.CONDITION_GT or condition_info == Command.CONDITION_LT:
       condition_codes[condition_codes.index(Code(f'JUMP', 0))].offset = commands_code_length + 1
+      condition_codes[condition_codes.index(Code(f'JUMP', commands_code_length + 1))].label = self.labeler.new_label('if_gtorlt_JUMP1')
+      condition_codes[condition_codes.index(Code(f'JPOS', 2))].label = self.labeler.new_label('if_gtorlt_JPOS1')
     elif condition_info == Command.CONDITION_GEQ or condition_info == Command.CONDITION_LEQ:
       condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = commands_code_length + 1
+      condition_codes[condition_codes.index(Code(f'JPOS', 4))].label = self.labeler.new_label('if_geqorleq_JPOS1')
+      condition_codes[condition_codes.index(Code(f'JPOS', commands_code_length + 1))].label = self.labeler.new_label('if_geqorleq_JPOS2')
     codes += condition_codes
     codes += commands_codes
     return codes
@@ -729,7 +735,7 @@ class CodeGenerator:
       condition_codes[condition_codes.index(Code(f'JPOS', 0))].offset = commands_code_length1 + 2
     codes += condition_codes
     codes += commands_codes1
-    codes += [Code(f'JUMP', commands_code_length2 + 1)]
+    codes += [Code(f'JUMP', commands_code_length2 + 1, self.labeler.new_label('ifelse_endJUMP'))]
     codes += commands_codes2
     return codes
 
