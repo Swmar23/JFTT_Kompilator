@@ -21,6 +21,11 @@ class Errors:
   def unknown_procedure(name, lineno):
     print(f'Błąd (wiersz {lineno}): użycie nieznanej procedury {name}', file = sys.stderr)
     exit(4)
+  
+  @staticmethod
+  def wrong_arguments_number(name, lineno):
+    print(f'Błąd (wiersz {lineno}): przekazano złą liczbę argumentów do procedury {name}', file = sys.stderr)
+    exit(5)
 
 
 class Variable:
@@ -159,9 +164,9 @@ class CodeGenerator:
   def generate_code(self, code, param, lineno):
     return {
       Command.PROGRAM_HALT: lambda x, l: self.__program_halt(x, l),
-      Command.PROCEDURES_VAR: lambda x, l: self.__procedures_var(x, l),
+      Command.PROCEDURES_VAR: lambda x, l: self.__procedures(x, l),
       Command.PROCEDURES: lambda x, l: self.__procedures(x, l),
-      Command.PROCEDURES_EMPTY: lambda x, l: self.__procedures_empty(x, l),
+      # Command.PROCEDURES_EMPTY: lambda x, l: self.__procedures_empty(x, l),
       Command.MAIN_VAR: lambda x, l: self.__main(x, l),
       Command.MAIN: lambda x, l: self.__main(x, l),
       Command.COMMANDS_COMMAND: lambda x, l: self.__commands_command(x, l),
@@ -180,7 +185,7 @@ class CodeGenerator:
       Command.DECLARATIONS_PROC: lambda x, l: self.__declarations_proc(x, l),
       Command.DECLARATIONS_PROC_LOCAL_LONG: lambda x, l: self.__declarations_proc_local_long(x, l),
       Command.DECLARATIONS_PROC_LOCAL: lambda x, l: self.__declarations_proc_local(x, l),
-      Command.DECLARATIONS_MAIN_LONG: lambda x, l: self.__declarations_main_long(x, l),
+      # Command.DECLARATIONS_MAIN_LONG: lambda x, l: self.__declarations_main_long(x, l),
       Command.DECLARATIONS_MAIN: lambda x, l: self.__declarations_main(x, l),
       Command.DECLARATIONS_CALL_LONG: lambda x, l: self.__declarations_call_long(x, l),
       Command.DECLARATIONS_CALL: lambda x, l: self.__declarations_call(x, l),
@@ -556,6 +561,29 @@ class CodeGenerator:
       codes += [Code(f'LOAD {address_pom_a}')] # reszta z dzielenia jest w pom_a
     return codes, value2_codes
 
+  def __command_proc_call(self, x, l):
+    proc_name = x[0]
+    if not(proc_name in self.procedure_addresses.keys):
+      Errors.unknown_procedure(proc_name, l)
+    arguments_to_pass = []
+    for variable in self.symbol_table:
+      if variable.origin == proc_name and variable.is_indirect == True:
+        arguments_to_pass += [variable.name]
+    arguments_passed = x[1]
+    if len(arguments_to_pass) != len(arguments_passed):
+      Errors.wrong_arguments_number(proc_name, l)
+    
+    codes = []
+    iterator = 0
+    for argument in arguments_passed:
+      var_address = self.symbol_table.getVariableAddress(Variable(argument, proc_name), l)
+      codes += [Code(f'SET {var_address}')]
+      indirect_var_address = self.symbol_table.getVariableAddress(Variable(arguments_to_pass[iterator], proc_name), l)
+      codes += [Code(f'STORE {indirect_var_address}')]
+    procedure_start_address = self.procedure_addresses[proc_name]
+    codes += [Code(f'SET', 2)]
+    codes += [Code(f'JUMP {procedure_start_address}')]
+
   def __declarations_main(self, x, l):
     variable = Variable(x, self.current_proc_name)
     self.symbol_table.addVariable(variable, l)
@@ -579,6 +607,17 @@ class CodeGenerator:
     variable = Variable(x, self.current_proc_name, is_local=True)
     self.symbol_table.addVariable(variable, l)
     return []
+
+  def __declarations_call(self, x, l):
+    return [x]
+
+  def __declarations_call_long(self, x, l):
+    variables = x[0]
+    variables += [x[1]]
+    return variables
+
+  def __proc_head_call(self, x, l):
+    return x
 
   def __proc_head_proc(self, x, l):
     proc_name = x[0]

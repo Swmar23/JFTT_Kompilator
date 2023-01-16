@@ -76,7 +76,7 @@ class MyParser(Parser):
 
   @_('proc_head_call SEMICOLON')
   def command(self, t):
-    pass
+    return self.code_generator.generate_code(Command.COMMAND_PROC_CALL, t.proc_head_call, t.lineno)
 
   @_('READ IDENTIFIER SEMICOLON')
   def command(self, t):
@@ -94,7 +94,7 @@ class MyParser(Parser):
   # proc_head_call ***********************************
   @_('IDENTIFIER LPAREN declarations_call RPAREN')
   def proc_head_call(self, t):
-    pass
+    return self.code_generator.generate_code(Command.PROC_HEAD_CALL, (t.IDENTIFIER, t.declarations_proc), t.lineno)
 
   # declarations_proc ********************************
   @_('declarations_proc COMMA IDENTIFIER')
@@ -126,11 +126,11 @@ class MyParser(Parser):
   # declarations_call ***********************************
   @_('declarations_call COMMA IDENTIFIER')
   def declarations_call(self, t):
-    pass
+    return self.code_generator.generate_code(Command.DECLARATIONS_CALL_LONG, (t.declarations_call, t.IDENTIFIER), t.lineno)
 
   @_('IDENTIFIER')
   def declarations_call(self, t):
-    pass
+    return self.code_generator.generate_code(Command.DECLARATIONS_CALL, (t.declarations_call, t.IDENTIFIER), t.lineno)
 
   # expression *******************************************
   @_('value')
