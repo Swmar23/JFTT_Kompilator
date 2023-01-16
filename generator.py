@@ -119,16 +119,16 @@ class SymbolTable:
 
   def __init__(self):
     self.addresses_main = []
-    self.first_address_main = 2 # 1 dla powrotu z procedury
+    self.first_address_main = 1
   
   def getVariableAddress(self, variable: Variable, lineno):
     for var in self.addresses_main:
       if variable == var:
-        return self.addresses_main.index(var) + 2
+        return self.addresses_main.index(var) + 1
     Errors.undeclared(variable.name, lineno)
 
   def getVariableFromAddress(self, address) -> Variable:
-    return self.addresses_main[address-2]
+    return self.addresses_main[address-1]
   
   def addVariable(self, variable: Variable, lineno):
     if variable in self.addresses_main:
@@ -141,12 +141,12 @@ class SymbolTable:
     var.is_initiated = True
 
   def isVarInitiated(self, address, lineno):
-    var = self.addresses_main[address-2]
+    var = self.addresses_main[address-1]
     return var.is_initiated
 
   def removeVariable(self, address):
     if address < len(self.addresses_main):
-      del self.addresses_main[address]
+      del self.addresses_main[address-1]
     else:
       print("skopane")
       exit(420)
@@ -577,12 +577,18 @@ class CodeGenerator:
     iterator = 0
     for argument in arguments_passed:
       var_address = self.symbol_table.getVariableAddress(Variable(argument, self.current_proc_name), l)
-      codes += [Code(f'SET {var_address}')]
+      variable = self.symbol_table.getVariableFromAddress(var_address)
+      if variable.is_indirect == True:
+        codes += [Code(f'LOADNOI {var_address}')]
+      else:
+        codes += [Code(f'SET {var_address}')]
       indirect_var_address = self.symbol_table.getVariableAddress(Variable(arguments_to_pass[iterator], proc_name), l)
       codes += [Code(f'STORE {indirect_var_address}')]
+      iterator += 1
     procedure_start_address = self.procedure_addresses[proc_name]
+    var_address = self.symbol_table.getVariableAddress(Variable('RET_'+proc_name, proc_name), l)
     codes += [Code(f'SET', 3)]
-    codes += [Code(f'STORE 1')]
+    codes += [Code(f'STORE {var_address}')]
     codes += [Code(f'JUMP {procedure_start_address}')]
     return codes
 
@@ -629,6 +635,8 @@ class CodeGenerator:
     for var in variables:
       variable = Variable(var, proc_name, is_initiated=True, is_indirect=True)
       self.symbol_table.addVariable(variable, l)
+    variable = Variable('RET_'+proc_name, proc_name, is_initiated=True)
+    self.symbol_table.addVariable(variable, l)
     return proc_name
   
   def __procedures(self, x, l):
@@ -640,14 +648,18 @@ class CodeGenerator:
       if code.name.startswith('STORE ') or code.name.startswith('LOAD ') or code.name.startswith('ADD ') or code.name.startswith('SUB '):
         code_type = code.name.split()[0]
         var_address = int(code.name.split()[1])
-        if var_address > 1:
-          variable = self.symbol_table.getVariableFromAddress(var_address)
-          if variable.is_indirect == True:
-            code.name = code_type + f'I {var_address}'
+        variable = self.symbol_table.getVariableFromAddress(var_address)
+        if variable.is_indirect == True and variable.origin == proc_name:
+          code.name = code_type + f'I {var_address}'
+      if code.name.startswith('LOADNOI'):
+        code_type = 'LOAD'
+        var_address = int(code.name.split()[1])
+        code.name = code_type + f' {var_address}'
     commands = []
     commands += previous_procedures_commands
     commands += proc_commands
-    commands += [Code('JUMPI 1')]
+    var_address = self.symbol_table.getVariableAddress(Variable('RET_'+proc_name, proc_name), l)
+    commands += [Code(f'JUMPI {var_address}')]
     return commands
 
   def __main(self, x, l):
