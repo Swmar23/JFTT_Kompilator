@@ -210,8 +210,8 @@ class CodeGenerator:
     variable = self.symbol_table.getVariableFromAddress(var_address)
     if variable.is_indirect:
       codes = []
-      codes += Code(f'GET 0')
-      codes += Code(f'STOREI {var_address}')
+      codes += [Code(f'GET 0')]
+      codes += [Code(f'STOREI {var_address}')]
     else:
       code = Code(f'GET {var_address}' )
       self.symbol_table.initiateVariable(variable, l)
@@ -224,8 +224,8 @@ class CodeGenerator:
     variable = self.symbol_table.getVariableFromAddress(var_address)
     codes = x[0]
     if variable.is_indirect:
-      codes += Code(f'LOADI {var_address}')
-      codes += Code(f'PUT 0')
+      codes += [Code(f'LOADI {var_address}')]
+      codes += [Code(f'PUT 0')]
     else:
       if not self.symbol_table.isVarInitiated(var_address, l):
         Errors.uninitiated(variable.name, l)
@@ -508,8 +508,8 @@ class CodeGenerator:
       codes += [Code(f'LOAD {address_pom_b}')]
       codes += [Code(f'SUB {address_pom_a}')]
       codes += [Code(f'JZERO', 3, self.labeler.new_label('mod_JZERO'))]     # gdy a >=b to spoko, działamy
-      codes += [Code(f'SET 0')]
-      codes += [Code(f'JUMP', 43, self.labeler.new_label('mod_JUMP'))]    #wyskocz gdy b > a!!! z wynikiem 0
+      codes += [Code(f'LOAD {address_pom_a}')]
+      codes += [Code(f'JUMP', 43, self.labeler.new_label('mod_JUMP'))]    #wyskocz gdy b > a!!! z wynikiem pom_a
       if not (Variable('POM_res', self.current_proc_name) in  self.symbol_table.addresses_main):
         self.symbol_table.addVariable(Variable('POM_res', self.current_proc_name, True), l)
       address_pom_res = self.symbol_table.getVariableAddress(Variable ('POM_res', self.current_proc_name), l)
