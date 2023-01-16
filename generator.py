@@ -124,11 +124,11 @@ class SymbolTable:
   def getVariableAddress(self, variable: Variable, lineno):
     for var in self.addresses_main:
       if variable == var:
-        return self.addresses_main.index(var) + 1
+        return self.addresses_main.index(var) + 2
     Errors.undeclared(variable.name, lineno)
 
   def getVariableFromAddress(self, address) -> Variable:
-    return self.addresses_main[address-1]
+    return self.addresses_main[address-2]
   
   def addVariable(self, variable: Variable, lineno):
     if variable in self.addresses_main:
@@ -141,7 +141,7 @@ class SymbolTable:
     var.is_initiated = True
 
   def isVarInitiated(self, address, lineno):
-    var = self.addresses_main[address-1]
+    var = self.addresses_main[address-2]
     return var.is_initiated
 
   def removeVariable(self, address):
@@ -563,10 +563,10 @@ class CodeGenerator:
 
   def __command_proc_call(self, x, l):
     proc_name = x[0]
-    if not(proc_name in self.procedure_addresses.keys):
+    if not(proc_name in self.procedure_addresses.keys()):
       Errors.unknown_procedure(proc_name, l)
     arguments_to_pass = []
-    for variable in self.symbol_table:
+    for variable in self.symbol_table.addresses_main:
       if variable.origin == proc_name and variable.is_indirect == True:
         arguments_to_pass += [variable.name]
     arguments_passed = x[1]
@@ -576,15 +576,18 @@ class CodeGenerator:
     codes = []
     iterator = 0
     for argument in arguments_passed:
-      var_address = self.symbol_table.getVariableAddress(Variable(argument, proc_name), l)
+      var_address = self.symbol_table.getVariableAddress(Variable(argument, self.current_proc_name), l)
       codes += [Code(f'SET {var_address}')]
       indirect_var_address = self.symbol_table.getVariableAddress(Variable(arguments_to_pass[iterator], proc_name), l)
       codes += [Code(f'STORE {indirect_var_address}')]
     procedure_start_address = self.procedure_addresses[proc_name]
-    codes += [Code(f'SET', 2)]
+    codes += [Code(f'SET', 3)]
+    codes += [Code(f'STORE 1')]
     codes += [Code(f'JUMP {procedure_start_address}')]
+    return codes
 
   def __declarations_main(self, x, l):
+    self.current_proc_name = 'main'
     variable = Variable(x, self.current_proc_name)
     self.symbol_table.addVariable(variable, l)
     codes = []
@@ -625,21 +628,22 @@ class CodeGenerator:
     self.current_proc_name = proc_name
     for var in variables:
       variable = Variable(var, proc_name, is_initiated=True, is_indirect=True)
-      self.symbol_table.addVariable(variable)
+      self.symbol_table.addVariable(variable, l)
     return proc_name
   
   def __procedures(self, x, l):
     previous_procedures_commands = x[0]
     proc_name = x[1]
     proc_commands = x[2]
-    self.procedure_addresses[proc_name]=len(previous_procedures_commands)
+    self.procedure_addresses[proc_name]=len(previous_procedures_commands)+1
     for code in proc_commands:
       if code.name.startswith('STORE ') or code.name.startswith('LOAD ') or code.name.startswith('ADD ') or code.name.startswith('SUB '):
         code_type = code.name.split()[0]
         var_address = int(code.name.split()[1])
-        variable = self.symbol_table.getVariableFromAddress(var_address)
-        if variable.is_indirect == True:
-          code.name = code_type + f'I {var_address}'
+        if var_address > 1:
+          variable = self.symbol_table.getVariableFromAddress(var_address)
+          if variable.is_indirect == True:
+            code.name = code_type + f'I {var_address}'
     commands = []
     commands += previous_procedures_commands
     commands += proc_commands
@@ -651,9 +655,13 @@ class CodeGenerator:
     return codes
 
   def __program_halt(self, x, l):
-    strings = []
-    iterator = 0
-    for code in x[1]:
+    procedures_codelength = len(x[0])
+    strings = [str(Code(f'JUMP {procedures_codelength+1}'))]
+    codes = []
+    codes += x[0]
+    codes += x[1]
+    iterator = 1
+    for code in codes:
       if code.offset != None:
         code.offset += iterator # tutaj to już przestaje być offset
       string = str(code)

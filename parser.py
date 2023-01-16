@@ -94,7 +94,7 @@ class MyParser(Parser):
   # proc_head_call ***********************************
   @_('IDENTIFIER LPAREN declarations_call RPAREN')
   def proc_head_call(self, t):
-    return self.code_generator.generate_code(Command.PROC_HEAD_CALL, (t.IDENTIFIER, t.declarations_proc), t.lineno)
+    return self.code_generator.generate_code(Command.PROC_HEAD_CALL, (t.IDENTIFIER, t.declarations_call), t.lineno)
 
   # declarations_proc ********************************
   @_('declarations_proc COMMA IDENTIFIER')
@@ -130,7 +130,7 @@ class MyParser(Parser):
 
   @_('IDENTIFIER')
   def declarations_call(self, t):
-    return self.code_generator.generate_code(Command.DECLARATIONS_CALL, (t.declarations_call, t.IDENTIFIER), t.lineno)
+    return self.code_generator.generate_code(Command.DECLARATIONS_CALL, t.IDENTIFIER, t.lineno)
 
   # expression *******************************************
   @_('value')
