@@ -14,18 +14,17 @@ class Errors:
 
   @staticmethod
   def uninitiated(name, lineno):
-    print(f'Błąd (wiersz {lineno}): użycie niezainicjalizowanej zmiennej {name}', file=sys.stderr)
-    exit(3)
+    print(f'Uwaga (wiersz {lineno}): zmienna {name} może być niezainicjalizowana.', file=sys.stderr)
 
   @staticmethod
   def unknown_procedure(name, lineno):
     print(f'Błąd (wiersz {lineno}): użycie nieznanej procedury {name}', file = sys.stderr)
-    exit(4)
+    exit(3)
   
   @staticmethod
   def wrong_arguments_number(name, lineno):
     print(f'Błąd (wiersz {lineno}): przekazano złą liczbę argumentów do procedury {name}', file = sys.stderr)
-    exit(5)
+    exit(4)
 
 
 class Variable:
