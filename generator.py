@@ -162,32 +162,30 @@ class CodeGenerator:
 
   def generate_code(self, code, param, lineno):
     return {
-      Command.PROGRAM_HALT: lambda x, l: self.__program_halt(x, l),
+      Command.PROGRAM_HALT: lambda x, l: self.__program_halt(x),
       Command.PROCEDURES_VAR: lambda x, l: self.__procedures(x, l),
       Command.PROCEDURES: lambda x, l: self.__procedures(x, l),
-      # Command.PROCEDURES_EMPTY: lambda x, l: self.__procedures_empty(x, l),
-      Command.MAIN_VAR: lambda x, l: self.__main(x, l),
-      Command.MAIN: lambda x, l: self.__main(x, l),
-      Command.COMMANDS_COMMAND: lambda x, l: self.__commands_command(x, l),
-      Command.COMMANDS: lambda x, l: self.__commands(x, l),
+      Command.MAIN_VAR: lambda x, l: self.__main(x),
+      Command.MAIN: lambda x, l: self.__main(x),
+      Command.COMMANDS_COMMAND: lambda x, l: self.__commands_command(x),
+      Command.COMMANDS: lambda x, l: self.__commands(x),
       Command.COMMAND_ASSIGN: lambda x, l: self.__command_assign(x, l),
-      Command.COMMAND_IF_ELSE: lambda x, l: self.__command_if_else(x, l),
-      Command.COMMAND_IF: lambda x, l: self.__command_if(x, l),
-      Command.COMMAND_WHILE: lambda x, l: self.__command_while(x, l),
-      Command.COMMAND_REPEAT: lambda x, l: self.__command_repeat(x, l),
+      Command.COMMAND_IF_ELSE: lambda x, l: self.__command_if_else(x),
+      Command.COMMAND_IF: lambda x, l: self.__command_if(x),
+      Command.COMMAND_WHILE: lambda x, l: self.__command_while(x),
+      Command.COMMAND_REPEAT: lambda x, l: self.__command_repeat(x),
       Command.COMMAND_PROC_CALL: lambda x, l: self.__command_proc_call(x, l),
       Command.COMMAND_READ: lambda x, l: self.__command_read(x, l),
       Command.COMMAND_WRITE: lambda x, l: self.__command_write(x, l),
       Command.PROC_HEAD_PROC: lambda x, l: self.__proc_head_proc(x, l),
-      Command.PROC_HEAD_CALL: lambda x, l: self.__proc_head_call(x, l),
-      Command.DECLARATIONS_PROC_LONG: lambda x, l: self.__declarations_proc_long(x, l),
-      Command.DECLARATIONS_PROC: lambda x, l: self.__declarations_proc(x, l),
+      Command.PROC_HEAD_CALL: lambda x, l: self.__proc_head_call(x),
+      Command.DECLARATIONS_PROC_LONG: lambda x, l: self.__declarations_proc_long(x),
+      Command.DECLARATIONS_PROC: lambda x, l: self.__declarations_proc(x),
       Command.DECLARATIONS_PROC_LOCAL_LONG: lambda x, l: self.__declarations_proc_local_long(x, l),
       Command.DECLARATIONS_PROC_LOCAL: lambda x, l: self.__declarations_proc_local(x, l),
-      # Command.DECLARATIONS_MAIN_LONG: lambda x, l: self.__declarations_main_long(x, l),
       Command.DECLARATIONS_MAIN: lambda x, l: self.__declarations_main(x, l),
-      Command.DECLARATIONS_CALL_LONG: lambda x, l: self.__declarations_call_long(x, l),
-      Command.DECLARATIONS_CALL: lambda x, l: self.__declarations_call(x, l),
+      Command.DECLARATIONS_CALL_LONG: lambda x, l: self.__declarations_call_long(x),
+      Command.DECLARATIONS_CALL: lambda x, l: self.__declarations_call(x),
       Command.EXPRESSION_VALUE: lambda x, l: self.__expression_value(x, l),
       Command.EXPRESSION_PLUS: lambda x, l: self.__expression_plus(x, l),
       Command.EXPRESSION_MINUS: lambda x, l: self.__expression_minus(x, l),
@@ -201,7 +199,7 @@ class CodeGenerator:
       Command.CONDITION_GEQ: lambda x, l: self.__condition_geq(x, l),
       Command.CONDITION_LEQ: lambda x, l: self.__condition_leq(x, l),
       Command.VALUE_NUM: lambda x, l: self.__value_num(x, l),
-      Command.VALUE_IDENTIFIER: lambda x, l: self.__value_identifier(x, l)
+      Command.VALUE_IDENTIFIER: lambda x, l: self.__value_identifier(x)
     }[code](param, lineno)
 
   def __command_read(self, x, l):
@@ -244,7 +242,7 @@ class CodeGenerator:
     codes += [Code(f'STORE {var_address}')]
     return codes
 
-  def __value_identifier(self, x, l):
+  def __value_identifier(self, x):
     return [], x
 
   def __value_num(self, x, l):
@@ -475,8 +473,6 @@ class CodeGenerator:
       codes += [Code(f'JZERO', -17, self.labeler.new_label('div_JZERO'))]  # gdy pom_a >= pom_b to zapisujemy
       codes += [Code(f'JUMP', -12, self.labeler.new_label('div_JUMP'))]  # gdy pom_a < pom_b to zmniejszamy pom_b
       codes += [Code(f'LOAD {address_pom_res}')] # wynik dzielenia jest w pom_res
-      # print("nie umiem dzielic :(")
-      # exit(2137)
     return codes, value2_info
 
   def __expression_mod(self, x, l):
@@ -577,6 +573,7 @@ class CodeGenerator:
     for argument in arguments_passed:
       var_address = self.symbol_table.getVariableAddress(Variable(argument, self.current_proc_name), l)
       variable = self.symbol_table.getVariableFromAddress(var_address)
+      self.symbol_table.initiateVariable(variable, l)
       if variable.is_indirect == True:
         codes += [Code(f'LOADNOI {var_address}')]
       else:
@@ -598,10 +595,10 @@ class CodeGenerator:
     codes = []
     return codes
 
-  def __declarations_proc(self, x, l):
+  def __declarations_proc(self, x):
     return [x]
 
-  def __declarations_proc_long(self, x, l):
+  def __declarations_proc_long(self, x):
     variables = x[0]
     variables += [x[1]]
     return variables
@@ -616,15 +613,15 @@ class CodeGenerator:
     self.symbol_table.addVariable(variable, l)
     return []
 
-  def __declarations_call(self, x, l):
+  def __declarations_call(self, x):
     return [x]
 
-  def __declarations_call_long(self, x, l):
+  def __declarations_call_long(self, x):
     variables = x[0]
     variables += [x[1]]
     return variables
 
-  def __proc_head_call(self, x, l):
+  def __proc_head_call(self, x):
     return x
 
   def __proc_head_proc(self, x, l):
@@ -661,11 +658,11 @@ class CodeGenerator:
     commands += [Code(f'JUMPI {var_address}')]
     return commands
 
-  def __main(self, x, l):
+  def __main(self, x):
     codes = x[1]
     return codes
 
-  def __program_halt(self, x, l):
+  def __program_halt(self, x):
     procedures_codelength = len(x[0])
     strings = [str(Code(f'JUMP {procedures_codelength+1}'))]
     codes = []
@@ -681,13 +678,12 @@ class CodeGenerator:
     strings += ["HALT"]
     return strings
 
-  def __commands_command(self, x, l):
-    # print(x)
+  def __commands_command(self, x):
     codes = x[0]
     codes += x[1]
     return codes
 
-  def __commands(self, x, l):
+  def __commands(self, x):
     return x
 
   def __condition_eq(self, x, l):
@@ -813,7 +809,7 @@ class CodeGenerator:
     codes += [Code(f'JPOS', 0)] # offset zmieniany
     return codes, Command.CONDITION_GEQ
   
-  def __command_if(self, x, l):
+  def __command_if(self, x):
     (condition_data, commands_codes) = x
     (condition_codes, condition_info) = condition_data
     codes = []
@@ -840,7 +836,7 @@ class CodeGenerator:
     codes += commands_codes
     return codes
 
-  def __command_if_else(self, x, l):
+  def __command_if_else(self, x):
     (condition_data, commands_codes1, commands_codes2) = x
     (condition_codes, condition_info) = condition_data
     commands_code_length1 = len(commands_codes1)
@@ -861,7 +857,7 @@ class CodeGenerator:
     codes += commands_codes2
     return codes
 
-  def __command_while(self, x, l):
+  def __command_while(self, x):
     (condition_data, commands_codes) = x
     (condition_codes, condition_info) = condition_data
     codes = []
@@ -881,7 +877,7 @@ class CodeGenerator:
     codes += [Code(f'JUMP', -commands_code_length - condition_codes_length)]
     return codes
 
-  def __command_repeat(self, x, l): # problematyczne, sporo do zmiany
+  def __command_repeat(self, x): 
     (condition_data, commands_codes) = x
     (condition_codes, condition_info) = condition_data
     codes = []
