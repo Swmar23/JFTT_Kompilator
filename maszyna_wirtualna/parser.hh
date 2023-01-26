@@ -48,9 +48,12 @@ extern int yydebug;
  
 #include<vector> 
 #include<utility>
+
+#define YYSTYPE long long
+
 using namespace std;
 
-#line 54 "parser.hh"
+#line 57 "parser.hh"
 
 /* Token type.  */
 #ifndef YYTOKENTYPE
