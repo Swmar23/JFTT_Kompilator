@@ -1,0 +1,9 @@
+PROGRAM IS
+VAR a, b, q, r
+BEGIN
+  READ a; READ b;
+  q := a / b;
+  r := a % b;
+  WRITE q;
+  WRITE r;
+END

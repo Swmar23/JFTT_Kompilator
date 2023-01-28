@@ -1,3 +1,5 @@
+# Marek Świergoń 261750
+
 import sys
 from parser import MyParser, MyLexer
 

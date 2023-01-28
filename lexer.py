@@ -1,3 +1,5 @@
+# Marek Świergoń 261750
+
 from sly import Lexer
 
 class MyLexer(Lexer):
