@@ -2,7 +2,7 @@ Marek Świergoń 261750 Języki Formalne i Techniki Translacji
 
 Kompilator prostego języka imperatywnego do kodu maszyny wirtualnej.
 
-**************************************************************************************
+************************************************************************************
 
 W celu uruchomienia kompilatora należy mieć zainstalowany język Python 
 w wersji 3.8 oraz bibliotekę sly w wersji co najmniej 0.5:
@@ -16,7 +16,7 @@ Instalacja biblioteki sly:
 pip3 install sly
 
 
-***************************************************************************************
+************************************************************************************
 
 Uruchomienie kompilatora jest w postaci polecenia:
 
